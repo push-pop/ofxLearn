@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\ofxLearn.cpp">
+      <Filter>addons\ofxLearn</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ofApp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libs\dlib\all\source.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ofxLearn.h">
+      <Filter>addons\ofxLearn</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ofApp.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="addons">
+      <UniqueIdentifier>{000582d5-9b9c-4b70-bf82-ac18e0ec5261}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxLearn">
+      <UniqueIdentifier>{06bc3cb8-3c65-4056-b636-d72bc50e86b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{7102f65d-ef19-4951-aa54-ff3875f68d0a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

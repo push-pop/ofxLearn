@@ -6,7 +6,7 @@
 #include "dlib/mlp.h"
 #include "dlib/svm/svm_threaded.h"
 #include "dlib/matrix/matrix_abstract.h"
-
+#include "dlib\svm\one_vs_one_trainer.h"
 #include "dlib/statistics/statistics.h"
 
 
