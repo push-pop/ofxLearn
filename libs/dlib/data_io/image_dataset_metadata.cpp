@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_IMAGE_DAtASET_METADATA_CPP__
-#define DLIB_IMAGE_DAtASET_METADATA_CPP__
+#ifndef DLIB_IMAGE_DAtASET_METADATA_CPPh_
+#define DLIB_IMAGE_DAtASET_METADATA_CPPh_
 
 #include "image_dataset_metadata.h"
 
@@ -76,15 +76,28 @@ namespace dlib
                         fout << " truncated='" << b.truncated << "'";
                     if (b.occluded)
                         fout << " occluded='" << b.occluded << "'";
+                    if (b.ignore)
+                        fout << " ignore='" << b.ignore << "'";
+                    if (b.angle != 0)
+                        fout << " angle='" << b.angle << "'";
+                    if (b.pose != 0)
+                        fout << " pose='" << b.pose << "'";
+                    if (b.detection_score != 0)
+                        fout << " detection_score='" << b.detection_score << "'";
 
-                    if (b.has_label() || b.has_head())
+                    if (b.has_label() || b.parts.size() != 0)
                     {
                         fout << ">\n";
 
                         if (b.has_label())
                             fout << "      <label>" << b.label << "</label>\n";
-                        if (b.has_head())
-                            fout << "      <head x='"<< b.head.x() <<"' y='"<< b.head.y() <<"'/>\n";
+                        
+                        // save all the parts
+                        std::map<std::string,point>::const_iterator itr;
+                        for (itr = b.parts.begin(); itr != b.parts.end(); ++itr)
+                        {
+                            fout << "      <part name='"<< itr->first << "' x='"<< itr->second.x() <<"' y='"<< itr->second.y() <<"'/>\n";
+                        }
 
                         fout << "    </box>\n";
                     }
@@ -141,65 +154,93 @@ namespace dlib
             }
 
             virtual void start_element ( 
-                const unsigned long ,
+                const unsigned long line_number,
                 const std::string& name,
                 const dlib::attribute_list& atts
             )
             {
-                if (ts.size() == 0) 
+                try
                 {
-                    if (name != "dataset")
+                    if (ts.size() == 0) 
                     {
-                        std::ostringstream sout;
-                        sout << "Invalid XML document.  Root tag must be <dataset>.  Found <" << name << "> instead.";
-                        throw dlib::error(sout.str());
+                        if (name != "dataset")
+                        {
+                            std::ostringstream sout;
+                            sout << "Invalid XML document.  Root tag must be <dataset>.  Found <" << name << "> instead.";
+                            throw dlib::error(sout.str());
+                        }
+                        else
+                        {
+                            ts.push_back(name);
+                            return;
+                        }
                     }
-                    else
+
+
+                    if (name == "box")
                     {
-                        ts.push_back(name);
-                        return;
+                        if (atts.is_in_list("top")) temp_box.rect.top() = sa = atts["top"];
+                        else throw dlib::error("<box> missing required attribute 'top'");
+
+                        if (atts.is_in_list("left")) temp_box.rect.left() = sa = atts["left"];
+                        else throw dlib::error("<box> missing required attribute 'left'");
+
+                        if (atts.is_in_list("width")) temp_box.rect.right() = sa = atts["width"];
+                        else throw dlib::error("<box> missing required attribute 'width'");
+
+                        if (atts.is_in_list("height")) temp_box.rect.bottom() = sa = atts["height"];
+                        else throw dlib::error("<box> missing required attribute 'height'");
+
+                        if (atts.is_in_list("difficult")) temp_box.difficult = sa = atts["difficult"];
+                        if (atts.is_in_list("truncated")) temp_box.truncated = sa = atts["truncated"];
+                        if (atts.is_in_list("occluded"))  temp_box.occluded  = sa = atts["occluded"];
+                        if (atts.is_in_list("ignore"))  temp_box.ignore  = sa = atts["ignore"];
+                        if (atts.is_in_list("angle"))  temp_box.angle  = sa = atts["angle"];
+                        if (atts.is_in_list("pose"))  temp_box.pose  = sa = atts["pose"];
+                        if (atts.is_in_list("detection_score"))  temp_box.detection_score  = sa = atts["detection_score"];
+
+                        temp_box.rect.bottom() += temp_box.rect.top()-1;
+                        temp_box.rect.right() += temp_box.rect.left()-1;
                     }
+                    else if (name == "part" && ts.back() == "box")
+                    {
+                        point temp;
+                        if (atts.is_in_list("x")) temp.x() = sa = atts["x"];
+                        else throw dlib::error("<part> missing required attribute 'x'");
+
+                        if (atts.is_in_list("y")) temp.y() = sa = atts["y"];
+                        else throw dlib::error("<part> missing required attribute 'y'");
+
+                        if (atts.is_in_list("name")) 
+                        {
+                            if (temp_box.parts.count(atts["name"])==0)
+                            {
+                                temp_box.parts[atts["name"]] = temp;
+                            }
+                            else
+                            {
+                                throw dlib::error("<part> with name '" + atts["name"] + "' is defined more than one time in a single box.");
+                            }
+                        }
+                        else 
+                        {
+                            throw dlib::error("<part> missing required attribute 'name'");
+                        }
+                    }
+                    else if (name == "image")
+                    {
+                        temp_image.boxes.clear();
+
+                        if (atts.is_in_list("file")) temp_image.filename = atts["file"];
+                        else throw dlib::error("<image> missing required attribute 'file'");
+                    }
+
+                    ts.push_back(name);
                 }
-
-
-                if (name == "box")
+                catch (error& e)
                 {
-                    if (atts.is_in_list("top")) temp_box.rect.top() = sa = atts["top"];
-                    else throw dlib::error("<box> missing required attribute 'top'");
-
-                    if (atts.is_in_list("left")) temp_box.rect.left() = sa = atts["left"];
-                    else throw dlib::error("<box> missing required attribute 'left'");
-
-                    if (atts.is_in_list("width")) temp_box.rect.right() = sa = atts["width"];
-                    else throw dlib::error("<box> missing required attribute 'width'");
-
-                    if (atts.is_in_list("height")) temp_box.rect.bottom() = sa = atts["height"];
-                    else throw dlib::error("<box> missing required attribute 'height'");
-
-                    if (atts.is_in_list("difficult")) temp_box.difficult = sa = atts["difficult"];
-                    if (atts.is_in_list("truncated")) temp_box.truncated = sa = atts["truncated"];
-                    if (atts.is_in_list("occluded"))  temp_box.occluded  = sa = atts["occluded"];
-
-                    temp_box.rect.bottom() += temp_box.rect.top()-1;
-                    temp_box.rect.right() += temp_box.rect.left()-1;
+                    throw dlib::error("Error on line " + cast_to_string(line_number) + ": " + e.what());
                 }
-                else if (name == "head" && ts.back() == "box")
-                {
-                    if (atts.is_in_list("x")) temp_box.head.x() = sa = atts["x"];
-                    else throw dlib::error("<head> missing required attribute 'x'");
-
-                    if (atts.is_in_list("y")) temp_box.head.y() = sa = atts["y"];
-                    else throw dlib::error("<head> missing required attribute 'y'");
-                }
-                else if (name == "image")
-                {
-                    temp_image.boxes.clear();
-
-                    if (atts.is_in_list("file")) temp_image.filename = atts["file"];
-                    else throw dlib::error("<image> missing required attribute 'file'");
-                }
-
-                ts.push_back(name);
             }
 
             virtual void end_element ( 
@@ -284,7 +325,7 @@ namespace dlib
             if (!fin)
                 throw dlib::error("ERROR: unable to open " + filename + " for reading.");
 
-            xml_parser::kernel_1a parser;
+            xml_parser parser;
             parser.add_document_handler(dh);
             parser.add_error_handler(eh);
             parser.parse(fin);
@@ -308,19 +349,20 @@ namespace dlib
             sout << "gNyarPZCiR6nvqNvCjtP2MP5FxleqNf8Fylatm2KdsXmrv5K87LYVN7i7JMkmZ++cTXYSOxDmxZi";
             sout << "OiCH8funXUdF9apDW547gCjz9HOQUI6dkz5dYUeFjfp6dFugpnaJyyprFLKq048Qk7+QiL4CNF/G";
             sout << "7e0VpBw8dMpiyRNi2fSQGSZGfIAUQKKT6+rPwQoRH2spdjsdXVWj4XQAqBX87nmqMnqjMhn/Vd1s";
-            sout << "W5aoC0drwRGu3Xe3gn9vBL8hBkRXcKndVwPFMPUeADJ2Z2tc8cb9MqwkOCPBKdfQ+w24u/kvjdsQ";
-            sout << "Kq20+MI2uPOSGbCebui/yMveNYUeot5b4s+ZyRIdcbURUHlQQ68BZQVj0WTw+8ohK7VUpjidF/T+";
-            sout << "gawZzSnr/HrocEedQL7DyjyVuC03qoFGlwe6Q/4ynndgscVhXyVleneSpOlx/CGOlBKXzwyEpEi8";
-            sout << "JV4kPhoJ21N5va7iyDgxuikbDT94tFYje9GtXQOPGPERKzxnp6dCor3a5dPLOfmVsvAdEDtr7B3e";
-            sout << "WJpFbfD4XtFfllWmwxggCqyfvz/q7kMQzhsH623CLRDre9AsIRg830e6T992uKgtXx8QM4GPhsjc";
-            sout << "leFCNzwDqpeORW7oJ72COj3pgGIn2/BGDWrr1oqu0ACKy7vY32VcgvyFcWbqqdEX71SQ9LcxCbet";
-            sout << "iwrBJY8n//Whq55kD0hpSffmW+uup6sV8sbAI7rwnCYpfUNQHXgN+5sLot67jhO03FlafaEmrgfT";
-            sout << "XKjBU+z64tCCy1uwJj8gx0CBVFhr8MPzGkKp3rAaeKzVYZJbC2TkZPL+PMjohL0SDhaXxiwX+pKo";
-            sout << "VHNRqCmlnrxmB6kikuS5zN5Z6feHW6KNhhcEKuXvDawYNlppJvMt1lE0Q9oKx+JL3Atlm+V8/Q2R";
-            sout << "fI5DQAaCaxMXdzJcDfNPMHOIcYlkQPIk9cdLqScrbFu9VjFpqGyGoTGOUiiJP4d3peJvEbRgZZ8d";
-            sout << "SUaF4cycZh4yRSI06rrTGi3wyS5HjRFgS+giS2p0ZUi+7YAt1opbkDhcovTxZGUkuavZBCsjZw3C";
-            sout << "1CNGurdvhw9mOOL9JY3Vn/wfb9t4ScwaGGrUoeyZHXMARoHYVF1ST7gGOHL2qMRMdXr+k0P3OLxO";
-            sout << "4DVe0r3v93vpyqd5KgA=";
+            sout << "W5aoC0drwRGu3Xe3gn9vBL8hBkRXcJvEy6q/lb9bYnsLemhE5Zp/+nTmTBjfT9UFYLcsmgsjC+4n";
+            sout << "Bq6h9QlpuyMYqJ8RvW8pp3mFlvXc3Yg+18t5F0hSMQfaIFYAuDPU2lVzPpY+ba0B39iu9IrPCLsS";
+            sout << "+tUtSNSmQ74CtzZgKKjkTMA3nwYP2SDmZE3firq42pihT7hdU5vYkes69K8AQl8WZyLPpMww+r0z";
+            sout << "+veEHPlAuxF7kL3ZvVjdB+xABwwqDe0kSRHRZINYdUfJwJdfYLyDnYoMjj6afqIJZ7QOBPZ42tV5";
+            sout << "3hYOQTFwTNovOastzJJXQe1kxPg1AQ8ynmfjjJZqD0xKedlyeJybP919mVAA23UryHsq9TVlabou";
+            sout << "qNl3xZW/mKKktvVsd/nuH62HIv/kgomyhaEUY5HgupupBUbQFZfyljZ5bl3g3V3Y1400Z1xTM/LL";
+            sout << "LJpeLdlqoGzIe/19vAN1zUUVId9F/OLNUl3Zoar63yZERSJHcsuq/Pasisp0HIGi7rfI9EIQF7C/";
+            sout << "IhLKLZsJ+LOycreQGOJALZIEZHOqxYLSXG0qaPM5bQL/MQJ2OZfwEhQgYOrjaM7oPOHHEfTq5kcO";
+            sout << "daMwzefKfxrF2GXbUs0bYsEXsIGwENIUKMliFaAI4qKLxxb94oc+O3BRjWueZjZty2zKawQyTHNd";
+            sout << "ltFJBUzfffdZN9Wq4zbPzntkM3U6Ys4LRztx5M15dtbhFeKx5rAf2tPXT6wU01hx7EJxBJzpvoDE";
+            sout << "YwEoYVDSYulRKpgk82cHFzzUDgWXbl4paFSe1L1w8r9KHr67SYJDTUG86Lrm6LJ0rw73Xp0NAFcU";
+            sout << "MKpiG9g1cHW74HYbUb/yAbtVWt40eB7M637umdo2jWz/r/vP5WnfSMXEbkyWebsa1fFceg/TLWy6";
+            sout << "E8OTc4XKB48h1oFIlGagOiprxho3+F3TIcxDSwA=";
+
 
 
             // Put the data into the istream sin
@@ -346,6 +388,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-#endif // DLIB_IMAGE_DAtASET_METADATA_CPP__
+#endif // DLIB_IMAGE_DAtASET_METADATA_CPPh_
 
 

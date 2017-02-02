@@ -1,7 +1,7 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_RLS_FiLTER_H__
-#define DLIB_RLS_FiLTER_H__
+#ifndef DLIB_RLS_FiLTER_Hh_
+#define DLIB_RLS_FiLTER_Hh_
 
 #include "rls_filter_abstract.h"
 #include "../svm/rls.h"
@@ -92,7 +92,7 @@ namespace dlib
 
             // predict next state
             for (long i = 0; i < next.size(); ++i)
-                next(i) = filter(vector_to_matrix(data[i]));
+                next(i) = filter(mat(data[i]));
         }
 
         template <typename EXP>
@@ -127,7 +127,7 @@ namespace dlib
                 // showing it to the rls filter so it can do its thing.
                 if (count >= 2)
                 {
-                    filter.train(vector_to_matrix(data[i]), z(i));
+                    filter.train(mat(data[i]), z(i));
                 }
 
                 // keep track of the measurements in our circular buffer
@@ -139,7 +139,7 @@ namespace dlib
             {
                 // predict next state
                 for (long i = 0; i < z.size(); ++i)
-                    next(i) = filter(vector_to_matrix(data[i]));
+                    next(i) = filter(mat(data[i]));
             }
             else
             {
@@ -151,7 +151,7 @@ namespace dlib
         }
 
         const matrix<double,0,1>& get_predicted_next_state(
-        )
+        ) const
         {
             return next;
         }
@@ -194,5 +194,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_RLS_FiLTER_H__
+#endif // DLIB_RLS_FiLTER_Hh_
 

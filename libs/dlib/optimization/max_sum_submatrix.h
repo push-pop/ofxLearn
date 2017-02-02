@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_MAX_SUM_SUBMaTRIX_H__
-#define DLIB_MAX_SUM_SUBMaTRIX_H__
+#ifndef DLIB_MAX_SUM_SUBMaTRIX_Hh_
+#define DLIB_MAX_SUM_SUBMaTRIX_Hh_
 
 #include "max_sum_submatrix_abstract.h"
 #include "../matrix.h"
@@ -193,7 +193,7 @@ namespace dlib
         universe_set.top_min = 0;
         universe_set.bottom_max = mat.nr()-1;
         universe_set.top_max = mat.nr()-1;
-        universe_set.weight = sum(rowm(array_to_matrix(sum_pos),mat.nr()));
+        universe_set.weight = sum(rowm(dlib::mat(sum_pos),mat.nr()));
 
         q.push(universe_set);
 
@@ -247,7 +247,7 @@ namespace dlib
                 }
 
 
-                universe_set.weight = sum(rowm(array_to_matrix(sum_pos),mat.nr()));
+                universe_set.weight = sum(rowm(dlib::mat(sum_pos),mat.nr()));
                 if (universe_set.weight <= thresh)
                     break;
 
@@ -281,5 +281,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_MAX_SUM_SUBMaTRIX_H__
+#endif // DLIB_MAX_SUM_SUBMaTRIX_Hh_
 

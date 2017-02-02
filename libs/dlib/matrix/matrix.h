@@ -15,6 +15,14 @@
 #include "matrix_data_layout.h"
 #include "matrix_assign_fwd.h"
 #include "matrix_op.h"
+#include <utility>
+#ifdef DLIB_HAS_INITIALIZER_LISTS
+#include <initializer_list>
+#endif
+
+#ifdef MATLAB_MEX_FILE
+#include <mex.h>
+#endif
 
 #ifdef _MSC_VER
 // Disable the following warnings for Visual Studio
@@ -957,6 +965,11 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
+    template <typename T>
+    struct op_pointer_to_mat;
+    template <typename T>
+    struct op_pointer_to_col_vect;
+
     template <
         typename T,
         long num_rows,
@@ -996,6 +1009,8 @@ namespace dlib
         const static long NR = matrix_traits<matrix>::NR;
         const static long NC = matrix_traits<matrix>::NC;
         const static long cost = matrix_traits<matrix>::cost;
+        typedef T*          iterator;       
+        typedef const T*    const_iterator; 
 
         matrix () 
         {
@@ -1098,6 +1113,106 @@ namespace dlib
             data.set_size(m.nr(),m.nc());
             matrix_assign(*this, m);
         }
+
+#ifdef DLIB_HAS_INITIALIZER_LISTS
+        matrix(const std::initializer_list<T>& l)
+        {
+            if (NR*NC != 0)
+            {
+                DLIB_ASSERT(l.size() == NR*NC, 
+                    "\t matrix::matrix(const std::initializer_list& l)"
+                    << "\n\t You are trying to initialize a statically sized matrix with a list that doesn't have a matching size."
+                    << "\n\t l.size(): "<< l.size()
+                    << "\n\t NR*NC:    "<< NR*NC);
+
+                data.set_size(NR, NC);
+            }
+            else if (NR!=0) 
+            {
+                DLIB_ASSERT(l.size()%NR == 0, 
+                    "\t matrix::matrix(const std::initializer_list& l)"
+                    << "\n\t You are trying to initialize a statically sized matrix with a list that doesn't have a compatible size."
+                    << "\n\t l.size(): "<< l.size()
+                    << "\n\t NR:       "<< NR);
+
+                if (l.size() != 0)
+                    data.set_size(NR, l.size()/NR);
+            }
+            else if (NC!=0) 
+            {
+                DLIB_ASSERT(l.size()%NC == 0, 
+                    "\t matrix::matrix(const std::initializer_list& l)"
+                    << "\n\t You are trying to initialize a statically sized matrix with a list that doesn't have a compatible size."
+                    << "\n\t l.size(): "<< l.size()
+                    << "\n\t NC:       "<< NC);
+
+                if (l.size() != 0)
+                    data.set_size(l.size()/NC, NC);
+            }
+            else if (l.size() != 0)
+            {
+                data.set_size(l.size(),1);
+            }
+
+            if (l.size() != 0)
+            {
+                T* d = &data(0,0);
+                for (auto&& v : l)
+                    *d++ = v;
+            }
+
+        }
+
+        matrix& operator=(const std::initializer_list<T>& l)
+        {
+            matrix temp(l);
+            temp.swap(*this);
+            return *this;
+        }
+#endif // DLIB_HAS_INITIALIZER_LISTS
+
+#ifdef DLIB_HAS_RVALUE_REFERENCES
+        matrix(matrix&& item)
+        {
+        #ifdef MATLAB_MEX_FILE
+            // You can't move memory around when compiled in a matlab mex file and the
+            // different locations have different ownership settings.
+            if (data._private_is_owned_by_matlab() == item.data._private_is_owned_by_matlab())
+            {
+                swap(item);
+            }
+            else
+            {
+                data.set_size(item.nr(),item.nc());
+                matrix_assign(*this, item);
+            }
+        #else
+            swap(item);
+        #endif
+        }
+
+        matrix& operator= (
+            matrix&& rhs
+        )
+        {
+        #ifdef MATLAB_MEX_FILE
+            // You can't move memory around when compiled in a matlab mex file and the
+            // different locations have different ownership settings.
+            if (data._private_is_owned_by_matlab() == rhs.data._private_is_owned_by_matlab())
+            {
+                swap(rhs);
+            }
+            else
+            {
+                data.set_size(rhs.nr(),rhs.nc());
+                matrix_assign(*this, rhs);
+            }
+        #else
+            swap(rhs);
+        #endif
+            return *this;
+        }
+#endif // DLIB_HAS_RVALUE_REFERENCES
 
         template <typename U, size_t len>
         explicit matrix (
@@ -1215,6 +1330,31 @@ namespace dlib
                 );
             return data(0);
         }
+
+#ifdef MATLAB_MEX_FILE
+        void _private_set_mxArray(
+            mxArray* mem 
+        )
+        {
+            data._private_set_mxArray(mem);
+        }
+
+        mxArray* _private_release_mxArray(
+        )
+        {
+            return data._private_release_mxArray();
+        }
+
+        void _private_mark_owned_by_matlab()
+        {
+            data._private_mark_owned_by_matlab();
+        }
+
+        bool _private_is_owned_by_matlab()
+        {
+            return data._private_is_owned_by_matlab();
+        }
+#endif
 
         void set_size (
             long rows,
@@ -1388,6 +1528,9 @@ namespace dlib
             }
             else
             {
+                DLIB_ASSERT(size() == 0, 
+                    "\t const matrix::operator+=(m)"
+                    << "\n\t You are trying to add two matrices that have incompatible dimensions.");
                 *this = m;
             }
             return *this;
@@ -1422,6 +1565,9 @@ namespace dlib
             }
             else
             {
+                DLIB_ASSERT(size() == 0, 
+                    "\t const matrix::operator-=(m)"
+                    << "\n\t You are trying to subtract two matrices that have incompatible dimensions.");
                 *this = -m;
             }
             return *this;
@@ -1448,6 +1594,10 @@ namespace dlib
             }
             else
             {
+                DLIB_ASSERT(this->size() == 0, 
+                    "\t const matrix::operator+=(m)"
+                    << "\n\t You are trying to add two matrices that have incompatible dimensions.");
+
                 set_size(m.nr(), m.nc());
                 for (long i = 0; i < size; ++i)
                     data(i) = m.data(i);
@@ -1467,6 +1617,9 @@ namespace dlib
             }
             else
             {
+                DLIB_ASSERT(this->size() == 0, 
+                    "\t const matrix::operator-=(m)"
+                    << "\n\t You are trying to subtract two matrices that have incompatible dimensions.");
                 set_size(m.nr(), m.nc());
                 for (long i = 0; i < size; ++i)
                     data(i) = -m.data(i);
@@ -1500,9 +1653,7 @@ namespace dlib
             const T a
         )
         {
-            const long size = data.nr()*data.nc();
-            for (long i = 0; i < size; ++i)
-                data(i) *= a;
+            *this = *this * a;
             return *this;
         }
 
@@ -1510,9 +1661,7 @@ namespace dlib
             const T a
         )
         {
-            const long size = data.nr()*data.nc();
-            for (long i = 0; i < size; ++i)
-                data(i) /= a;
+            *this = *this / a;
             return *this;
         }
 
@@ -1551,6 +1700,46 @@ namespace dlib
             const matrix_exp<U>& 
         ) const { return false; }
 
+        // These two aliases() routines are defined in matrix_mat.h
+        bool aliases (
+            const matrix_exp<matrix_op<op_pointer_to_mat<T> > >& item
+        ) const;
+        bool aliases (
+            const matrix_exp<matrix_op<op_pointer_to_col_vect<T> > >& item
+        ) const;
+
+        iterator begin() 
+        {
+            if (size() != 0)
+                return &data(0,0);
+            else
+                return 0;
+        }
+
+        iterator end()
+        {
+            if (size() != 0)
+                return &data(0,0)+size();
+            else
+                return 0;
+        }
+
+        const_iterator begin()  const
+        {
+            if (size() != 0)
+                return &data(0,0);
+            else
+                return 0;
+        }
+
+        const_iterator end() const
+        {
+            if (size() != 0)
+                return &data(0,0)+size();
+            else
+                return 0;
+        }
+
     private:
         struct literal_assign_helper
         {
@@ -1561,8 +1750,8 @@ namespace dlib
             */
 
             literal_assign_helper(const literal_assign_helper& item) : m(item.m), r(item.r), c(item.c), has_been_used(false) {}
-            literal_assign_helper(matrix* m_): m(m_), r(0), c(0),has_been_used(false) {next();}
-            ~literal_assign_helper()
+            explicit literal_assign_helper(matrix* m_): m(m_), r(0), c(0),has_been_used(false) {next();}
+            ~literal_assign_helper() noexcept(false)
             {
                 DLIB_CASSERT(!has_been_used || r == m->nr(),
                              "You have used the matrix comma based assignment incorrectly by failing to\n"
@@ -1589,6 +1778,8 @@ namespace dlib
 
         private:
 
+            friend class matrix<T,num_rows,num_cols,mem_manager,layout>;
+
             void next (
             ) const
             {
@@ -1607,6 +1798,14 @@ namespace dlib
         };
 
     public:
+
+        matrix& operator = (
+            const literal_assign_helper& val
+        ) 
+        {  
+            *this = *val.m;
+            return *this;
+        }
 
         const literal_assign_helper operator = (
             const T& val
@@ -1663,8 +1862,12 @@ namespace dlib
     {
         try
         {
-            serialize(item.nr(),out);
-            serialize(item.nc(),out);
+            // The reason the serialization is a little funny is because we are trying to
+            // maintain backwards compatibility with an older serialization format used by
+            // dlib while also encoding things in a way that lets the array2d and matrix
+            // objects have compatible serialization formats.
+            serialize(-item.nr(),out);
+            serialize(-item.nc(),out);
             for (long r = 0; r < item.nr(); ++r)
             {
                 for (long c = 0; c < item.nc(); ++c)
@@ -1696,6 +1899,13 @@ namespace dlib
             long nr, nc;
             deserialize(nr,in); 
             deserialize(nc,in); 
+
+            // this is the newer serialization format
+            if (nr < 0 || nc < 0)
+            {
+                nr *= -1;
+                nc *= -1;
+            }
 
             if (NR != 0 && nr != NR)
                 throw serialization_error("Error while deserializing a dlib::matrix.  Invalid rows");
@@ -1753,6 +1963,67 @@ namespace dlib
         }
         out.width(old);
         return out;
+    }
+
+    /*
+    template <
+        typename T, 
+        long NR, 
+        long NC,
+        typename MM,
+        typename L
+        >
+    std::istream& operator>> (
+        std::istream& in,
+        matrix<T,NR,NC,MM,L>& m
+    );
+
+    This function is defined inside the matrix_read_from_istream.h file.
+    */
+
+// ----------------------------------------------------------------------------------------
+
+    class print_matrix_as_csv_helper 
+    {
+        /*!
+            This object is used to define an io manipulator for matrix expressions.
+            In particular, this code allows you to write statements like:
+                cout << csv << yourmatrix;
+            and have it print the matrix with commas separating each element.
+        !*/
+    public:
+        print_matrix_as_csv_helper (std::ostream& out_) : out(out_) {}
+
+        template <typename EXP>
+        std::ostream& operator<< (
+            const matrix_exp<EXP>& m
+        ) 
+        {
+            for (long r = 0; r < m.nr(); ++r)
+            {
+                for (long c = 0; c < m.nc(); ++c)
+                {
+                    if (c+1 == m.nc())
+                        out << m(r,c) << "\n";
+                    else
+                        out << m(r,c) << ", ";
+                }
+            }
+            return out;
+        }
+
+    private:
+        std::ostream& out;
+    };
+
+    class print_matrix_as_csv {};
+    const print_matrix_as_csv csv = print_matrix_as_csv();
+    inline print_matrix_as_csv_helper operator<< (
+        std::ostream& out,
+        const print_matrix_as_csv& 
+    )
+    {
+        return print_matrix_as_csv_helper(out);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1829,6 +2100,9 @@ namespace dlib
     };
 
 // ----------------------------------------------------------------------------------------
+
+    typedef matrix<double,0,0,default_memory_manager,column_major_layout> matrix_colmajor;
+    typedef matrix<float,0,0,default_memory_manager,column_major_layout> fmatrix_colmajor;
 
 }
 

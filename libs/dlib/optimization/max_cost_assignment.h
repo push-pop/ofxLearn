@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_MAX_COST_ASSIgNMENT_H__
-#define DLIB_MAX_COST_ASSIgNMENT_H__
+#ifndef DLIB_MAX_COST_ASSIgNMENT_Hh_
+#define DLIB_MAX_COST_ASSIgNMENT_Hh_
 
 #include "max_cost_assignment_abstract.h"
 #include "../matrix.h"
@@ -28,12 +28,12 @@ namespace dlib
         // can't call max on an empty vector. So put an if here to guard against it.
         if (assignment.size() > 0)
         {
-            DLIB_ASSERT(0 <= min(vector_to_matrix(assignment)) && max(vector_to_matrix(assignment)) < cost.nr(),
+            DLIB_ASSERT(0 <= min(mat(assignment)) && max(mat(assignment)) < cost.nr(),
                 "\t type assignment_cost(cost,assignment)"
                 << "\n\t cost.nr(): " << cost.nr()
                 << "\n\t cost.nc(): " << cost.nc()
-                << "\n\t min(assignment): " << min(vector_to_matrix(assignment)) 
-                << "\n\t max(assignment): " << max(vector_to_matrix(assignment)) 
+                << "\n\t min(assignment): " << min(mat(assignment)) 
+                << "\n\t max(assignment): " << max(mat(assignment)) 
                 );
         }
 #endif
@@ -283,6 +283,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_MAX_COST_ASSIgNMENT_H__
+#endif // DLIB_MAX_COST_ASSIgNMENT_Hh_
 
 

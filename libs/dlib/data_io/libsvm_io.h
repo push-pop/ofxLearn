@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_LIBSVM_iO_H__
-#define DLIB_LIBSVM_iO_H__
+#ifndef DLIB_LIBSVM_iO_Hh_
+#define DLIB_LIBSVM_iO_Hh_
 
 #include "libsvm_io_abstract.h"
 
@@ -23,13 +23,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    namespace impl
-    {
-        template <typename T> struct strip_const { typedef T type; };
-        template <typename T> struct strip_const<const T> { typedef T type; };
-        template <typename T> struct strip_const<const T&> { typedef T type; };
-    }
-
     template <typename sample_type, typename label_type, typename alloc1, typename alloc2>
     void load_libsvm_formatted_data (
         const std::string& file_name,
@@ -39,7 +32,7 @@ namespace dlib
     {
         using namespace std;
         typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
         typedef typename pair_type::second_type value_type;
 
         // You must use unsigned integral key types in your sparse vectors
@@ -92,12 +85,14 @@ namespace dlib
                 if (sin.get() != ':')
                     throw sample_data_io_error("On line: " + cast_to_string(line_num) + ", error while reading file " + file_name);
 
-                sin >> value >> ws;
+                sin >> value;
 
                 if (sin && value != 0)
                 {
                     sample.insert(sample.end(), make_pair(key, value));
                 }
+
+                sin >> ws;
             }
 
             samples.push_back(sample);
@@ -116,7 +111,7 @@ namespace dlib
     )
     {
         typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
 
         if (samples.size() == 0)
             return;
@@ -157,7 +152,7 @@ namespace dlib
     )
     {
         typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
 
         if (samples.size() == 0)
             return;
@@ -193,7 +188,7 @@ namespace dlib
     )
     {
         typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
 
         // You must use unsigned integral key types in your sparse vectors
         COMPILE_TIME_ASSERT(is_unsigned_type<key_type>::value);
@@ -275,51 +270,7 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    template <typename sample_type, typename alloc>
-    std::vector<matrix<typename sample_type::value_type::second_type,0,1> > sparse_to_dense (
-        const std::vector<sample_type, alloc>& samples
-    )
-    {
-        typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
-
-        // You must use unsigned integral key types in your sparse vectors
-        COMPILE_TIME_ASSERT(is_unsigned_type<key_type>::value);
-
-        typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
-        typedef typename pair_type::second_type value_type;
-
-        std::vector< matrix<value_type,0,1> > result;
-
-        // do nothing if there aren't any samples
-        if (samples.size() == 0)
-            return result;
-
-
-        // figure out how many elements we need in our dense vectors.  
-        const unsigned long max_dim = sparse_vector::max_index_plus_one(samples);
-
-
-        // now turn all the samples into dense samples
-        result.resize(samples.size());
-
-        for (unsigned long i = 0; i < samples.size(); ++i)
-        {
-            result[i].set_size(max_dim);
-            result[i] = 0;
-            for (typename sample_type::const_iterator j = samples[i].begin(); j != samples[i].end(); ++j)
-            {
-                result[i](j->first) = j->second;
-            }
-        }
-
-        return result;
-    }
-
-// ----------------------------------------------------------------------------------------
-
 }
 
-#endif // DLIB_LIBSVM_iO_H__
+#endif // DLIB_LIBSVM_iO_Hh_
 

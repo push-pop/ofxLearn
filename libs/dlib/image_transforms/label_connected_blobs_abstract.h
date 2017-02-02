@@ -5,6 +5,7 @@
 
 #include "../geometry.h"
 #include <vector>
+#include "../image_processing/generic_image.h"
 
 namespace dlib
 {
@@ -58,9 +59,9 @@ namespace dlib
                 with the label_connected_blobs() routine defined below.
         !*/
 
-        template <typename image_type>
+        template <typename image_view_type>
         bool operator() (
-            const image_type& img,
+            const image_view_type& img,
             const point& a,
             const point& b
         ) const
@@ -77,9 +78,9 @@ namespace dlib
                 with the label_connected_blobs() routine defined below.
         !*/
 
-        template <typename image_type>
+        template <typename image_view_type>
         bool operator() (
-            const image_type& img,
+            const image_view_type& img,
             const point& a,
             const point& b
         ) const
@@ -98,9 +99,9 @@ namespace dlib
                 with the label_connected_blobs() routine defined below.
         !*/
 
-        template <typename image_type>
+        template <typename image_view_type>
         bool operator() (
-            const image_type& img,
+            const image_view_type& img,
             const point& p
         ) const
         {
@@ -117,9 +118,9 @@ namespace dlib
                 with the label_connected_blobs() routine defined below.
         !*/
 
-        template <typename image_type>
+        template <typename image_view_type>
         bool operator() (
-            const image_type&, 
+            const image_view_type&, 
             const point& 
         ) const
         {
@@ -146,13 +147,15 @@ namespace dlib
     );
     /*!
         requires
-            - image_type       == is an implementation of array2d/array2d_kernel_abstract.h
-            - label_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain integers.
-            - is_background(img, point(c,r)) is a legal expression that evaluates to bool.
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - label_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain integer pixels.
+            - is_background(img, point(c,r)) is a legal expression that evaluates to a bool.
+            - is_connected(img, point(c,r), point(c2,r2)) is a legal expression that
+              evaluates to a bool.
             - get_neighbors(point(c,r), neighbors) is a legal expression where neighbors 
               is of type std::vector<point>.
-            - is_connected(img, point(c,r), point(c2,r2)) is a valid expression.
             - is_same_object(img, label_img) == false
         ensures
             - This function labels each of the connected blobs in img with a unique integer 
@@ -177,7 +180,7 @@ namespace dlib
                 - else
                     - #label_img[r][c] != 0
             - if (img.size() != 0) then 
-                - returns max(array_to_matrix(#label_img))+1
+                - returns max(mat(#label_img))+1
                   (i.e. returns a number one greater than the maximum blob id number, 
                   this is the number of blobs found.)
             - else

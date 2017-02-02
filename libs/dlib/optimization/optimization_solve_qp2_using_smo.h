@@ -1,7 +1,7 @@
 // Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SOLVE_QP2_USING_SMo_H__
-#define DLIB_SOLVE_QP2_USING_SMo_H__
+#ifndef DLIB_SOLVE_QP2_USING_SMo_Hh_
+#define DLIB_SOLVE_QP2_USING_SMo_Hh_
 
 #include "optimization_solve_qp2_using_smo_abstract.h"
 #include <cmath>
@@ -74,7 +74,7 @@ namespace dlib
         const T& y
     )
     {
-        return maximum_nu_impl(vector_to_matrix(y));
+        return maximum_nu_impl(mat(y));
     }
 
     template <
@@ -84,7 +84,7 @@ namespace dlib
         const T& y
     )
     {
-        return maximum_nu_impl(vector_to_matrix(y));
+        return maximum_nu_impl(mat(y));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -253,10 +253,11 @@ namespace dlib
                     }
                 }
             }
+
             if (count != num_total || has_slack == false)
             {
                 std::ostringstream sout;
-                cout << "Invalid nu of " << nu << ".  It is required that: 0 < nu < " << 2*(scalar_type)count/y.nr();
+                sout << "Invalid nu of " << nu << ".  It is required that: 0 < nu < " << 2*(scalar_type)count/y.nr();
                 throw invalid_nu_error(sout.str(),nu);
             }
         }
@@ -462,6 +463,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_SOLVE_QP2_USING_SMo_H__
+#endif // DLIB_SOLVE_QP2_USING_SMo_Hh_
 
 

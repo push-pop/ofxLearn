@@ -76,6 +76,7 @@ namespace dlib
                     << "\n\tinput_layer_nodes(): " << this->input_layer_nodes() 
                     << "\n\tthis:                " << this
             );
+
             return mlp_base::operator()(in);
         }
 
@@ -85,8 +86,6 @@ namespace dlib
             const matrix_exp<EXP2>& example_out 
         )
         {
-		
-	
             // make sure requires clause is not broken
             DLIB_CASSERT(example_in.nr() == this->input_layer_nodes() &&
                     example_in.nc() == 1 &&

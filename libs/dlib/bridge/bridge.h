@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_BRIDGe_H__
-#define DLIB_BRIDGe_H__
+#ifndef DLIB_BRIDGe_Hh_
+#define DLIB_BRIDGe_Hh_
 
 #include "bridge_abstract.h"
 #include <string>
@@ -42,6 +42,31 @@ namespace dlib
         const std::string ip;
         const unsigned short port;
     };
+
+    inline connect_to_ip_and_port connect_to (
+        const network_address& addr
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(addr.port != 0,
+            "\t connect_to_ip_and_port()"
+            << "\n\t The TCP port to connect to can't be 0."
+            << "\n\t addr.port: " << addr.port
+            );
+
+        if (is_ip_address(addr.host_address))
+        {
+            return connect_to_ip_and_port(addr.host_address, addr.port);
+        }
+        else
+        {
+            std::string ip;
+            if(hostname_to_ip(addr.host_address,ip))
+                throw socket_error(ERESOLVE,"unable to resolve '" + addr.host_address + "' in connect_to()");
+
+            return connect_to_ip_and_port(ip, addr.port);
+        }
+    }
 
     struct listen_on_port
     {
@@ -116,7 +141,7 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    namespace impl
+    namespace impl_brns
     {
         class impl_bridge_base
         {
@@ -363,7 +388,7 @@ namespace dlib
                     {
                         if (receive_pipe)
                         {
-                            sockstreambuf::kernel_2a buf(con);
+                            sockstreambuf buf(con);
                             std::istream in(&buf);
                             typename receive_pipe_type::type item;
                             // This isn't necessary but doing it avoids a warning about
@@ -397,6 +422,12 @@ namespace dlib
                     catch (dlib::serialization_error& e)
                     {
                         dlog << LERROR << "dlib::serialization_error thrown while deserializing message from " 
+                            << con->get_foreign_ip() << ":" << con->get_foreign_port() 
+                            << ".\nThe exception error message is: \n" << e.what();
+                    }
+                    catch (std::exception& e)
+                    {
+                        dlog << LERROR << "std::exception thrown while deserializing message from " 
                             << con->get_foreign_ip() << ":" << con->get_foreign_port() 
                             << ".\nThe exception error message is: \n" << e.what();
                     }
@@ -435,7 +466,7 @@ namespace dlib
 
                     try
                     {
-                        sockstreambuf::kernel_2a buf(con);
+                        sockstreambuf buf(con);
                         std::ostream out(&buf);
                         typename transmit_pipe_type::type item;
                         // This isn't necessary but doing it avoids a warning about
@@ -486,6 +517,12 @@ namespace dlib
                     catch (dlib::serialization_error& e)
                     {
                         dlog << LERROR << "dlib::serialization_error thrown while serializing message to " 
+                            << con->get_foreign_ip() << ":" << con->get_foreign_port() 
+                            << ".\nThe exception error message is: \n" << e.what();
+                    }
+                    catch (std::exception& e)
+                    {
+                        dlog << LERROR << "std::exception thrown while serializing message to " 
                             << con->get_foreign_ip() << ":" << con->get_foreign_port() 
                             << ".\nThe exception error message is: \n" << e.what();
                     }
@@ -557,26 +594,26 @@ namespace dlib
             listen_on_port network_parameters,
             bridge_transmit_decoration<T> transmit_pipe,
             bridge_receive_decoration<R> receive_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<T,R>(network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<T,R>(network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
 
         template < typename T, typename R >
         void reconfigure (
             listen_on_port network_parameters,
             bridge_receive_decoration<R> receive_pipe,
             bridge_transmit_decoration<T> transmit_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<T,R>(network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<T,R>(network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
 
         template < typename T >
         void reconfigure (
             listen_on_port network_parameters,
             bridge_transmit_decoration<T> transmit_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<T,T>(network_parameters.port, &transmit_pipe.p, 0)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<T,T>(network_parameters.port, &transmit_pipe.p, 0)); }
 
         template < typename R >
         void reconfigure (
             listen_on_port network_parameters,
             bridge_receive_decoration<R> receive_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<R,R>(network_parameters.port, 0, &receive_pipe.p)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<R,R>(network_parameters.port, 0, &receive_pipe.p)); }
 
 
 
@@ -586,26 +623,26 @@ namespace dlib
             connect_to_ip_and_port network_parameters,
             bridge_transmit_decoration<T> transmit_pipe,
             bridge_receive_decoration<R> receive_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<T,R>(network_parameters.ip, network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<T,R>(network_parameters.ip, network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
 
         template < typename T, typename R >
         void reconfigure (
             connect_to_ip_and_port network_parameters,
             bridge_receive_decoration<R> receive_pipe,
             bridge_transmit_decoration<T> transmit_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<T,R>(network_parameters.ip, network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<T,R>(network_parameters.ip, network_parameters.port, &transmit_pipe.p, &receive_pipe.p)); }
 
         template < typename R >
         void reconfigure (
             connect_to_ip_and_port network_parameters,
             bridge_receive_decoration<R> receive_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<R,R>(network_parameters.ip, network_parameters.port, 0, &receive_pipe.p)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<R,R>(network_parameters.ip, network_parameters.port, 0, &receive_pipe.p)); }
 
         template < typename T >
         void reconfigure (
             connect_to_ip_and_port network_parameters,
             bridge_transmit_decoration<T> transmit_pipe
-        ) { pimpl.reset(); pimpl.reset(new impl::impl_bridge<T,T>(network_parameters.ip, network_parameters.port, &transmit_pipe.p, 0)); }
+        ) { pimpl.reset(); pimpl.reset(new impl_brns::impl_bridge<T,T>(network_parameters.ip, network_parameters.port, &transmit_pipe.p, 0)); }
 
 
         bridge_status get_bridge_status (
@@ -619,12 +656,12 @@ namespace dlib
 
     private:
 
-        scoped_ptr<impl::impl_bridge_base> pimpl;
+        scoped_ptr<impl_brns::impl_bridge_base> pimpl;
     };
 
 // ---------------------------------------------------------------------------------------- 
 
 }
 
-#endif // DLIB_BRIDGe_H__
+#endif // DLIB_BRIDGe_Hh_
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_LINEAR_MANIFOLD_ReGULARIZER_H__
-#define DLIB_LINEAR_MANIFOLD_ReGULARIZER_H__
+#ifndef DLIB_LINEAR_MANIFOLD_ReGULARIZER_Hh_
+#define DLIB_LINEAR_MANIFOLD_ReGULARIZER_Hh_
 
 #include "linear_manifold_regularizer_abstract.h"
 #include <limits>
@@ -31,11 +31,11 @@ namespace dlib
 
             struct neighbor 
             {
-                neighbor(unsigned long idx, float w):index(idx), weight(w) {}
+                neighbor(unsigned long idx, double w):index(idx), weight(w) {}
                 neighbor():index(0), weight(0) {}
 
                 unsigned long index;
-                float weight;
+                double weight;
             };
 
             typedef std::vector<neighbor>::const_iterator const_iterator;
@@ -137,7 +137,7 @@ namespace dlib
                 // finally, put the edges into data
                 for (unsigned long i = 0; i < edges.size(); ++i)
                 {
-                    const float weight = weight_funct(edges[i]);
+                    const double weight = weight_funct(edges[i]);
                     sum_edge_weights += weight;
 
                     // make sure requires clause is not broken
@@ -324,5 +324,5 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-#endif // DLIB_LINEAR_MANIFOLD_ReGULARIZER_H__
+#endif // DLIB_LINEAR_MANIFOLD_ReGULARIZER_Hh_
 

@@ -1,12 +1,30 @@
 // Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
+
+#ifdef DLIB_ALL_SOURCE_END
+#include "dlib_basic_cpp_build_tutorial.txt"
+#endif
+
 #ifndef DLIB_ALGs_
 #define DLIB_ALGs_
 
 // this file contains miscellaneous stuff                      
 
+// Give people who forget the -std=c++11 option a reminder
+#if (defined(__GNUC__) && ((__GNUC__ >= 4 && __GNUC_MINOR__ >= 8) || (__GNUC__ > 4))) || \
+    (defined(__clang__) && ((__clang_major__ >= 3 && __clang_minor__ >= 4) || (__clang_major__ >= 3)))
+    #if __cplusplus < 201103
+        #error "Dlib requires C++11 support.  Give your compiler the -std=c++11 option to enable it."
+    #endif
+#endif
+
 
 #ifdef _MSC_VER
+
+#if  _MSC_VER < 1900
+#error "dlib versions newer than v19.1 use C++11 and therefore require Visual Studio 2015 or newer."
+#endif
+
 // Disable the following warnings for Visual Studio
 
 // this is to disable the "'this' : used in base member initializer list"
@@ -39,6 +57,13 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4305)
 
+// Disable "warning C4180: qualifier applied to function type has no meaning; ignored".
+// This warning happens often in generic code that works with functions and isn't useful.
+#pragma warning(disable : 4180)
+
+// Disable "warning C4290: C++ exception specification ignored except to indicate a function is not __declspec(nothrow)"
+#pragma warning(disable : 4290)
+
 #endif
 
 #ifdef __BORLANDC__
@@ -67,11 +92,13 @@ namespace std
 #include <algorithm>    // for std::swap
 #include <new>          // for std::bad_alloc
 #include <cstdlib>
+#include <limits> // for std::numeric_limits for is_finite()
 #include "assert.h"
 #include "error.h"
 #include "noncopyable.h"
 #include "enable_if.h"
 #include "uintn.h"
+#include "numeric_constants.h"
 #include "memory_manager_stateless/memory_manager_stateless_kernel_1.h" // for the default memory manager
 
 
@@ -269,7 +296,7 @@ namespace dlib
             typename A,
             typename B
             >
-        bool operator> (
+        constexpr bool operator> (
             const A& a,
             const B& b
         ) { return b < a; }
@@ -280,7 +307,7 @@ namespace dlib
             typename A,
             typename B
             >
-        bool operator!= (
+        constexpr bool operator!= (
             const A& a,
             const B& b
         ) { return !(a == b); }
@@ -291,7 +318,7 @@ namespace dlib
             typename A,
             typename B
             >
-        bool operator<= (
+        constexpr bool operator<= (
             const A& a,
             const B& b
         ) { return !(b < a); }
@@ -302,7 +329,7 @@ namespace dlib
             typename A,
             typename B
             >
-        bool operator>= (
+        constexpr bool operator>= (
             const A& a,
             const B& b
         ) { return !(a < b); }
@@ -325,7 +352,7 @@ namespace dlib
         the member functions called swap) makes them compile right.
 
         So this is a workaround but not too ugly of one.  But hopefully I get get
-        rid of this in a few years.  So this function is alredy deprecated. 
+        rid of this in a few years.  So this function is already deprecated. 
 
         This also means you should NOT use this function in your own code unless
         you have to support an old buggy compiler that benefits from this hack.
@@ -474,6 +501,13 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    struct general_ {};
+    struct special_ : general_ {};
+    template<typename> struct int_ { typedef int type; };
+
+// ----------------------------------------------------------------------------------------
+
+
     /*!A is_same_object 
 
         This is a templated function which checks if both of its arguments are actually
@@ -512,7 +546,7 @@ namespace dlib
     /*!A is_unsigned_type 
 
         This is a template where is_unsigned_type<T>::value == true when T is an unsigned
-        integral type and false when T is a signed integral type.
+        scalar type and false when T is a signed scalar type.
     !*/
     template <
         typename T
@@ -521,13 +555,16 @@ namespace dlib
     {
         static const bool value = static_cast<T>((static_cast<T>(0)-static_cast<T>(1))) > 0;
     };
+    template <> struct is_unsigned_type<long double> { static const bool value = false; };
+    template <> struct is_unsigned_type<double>      { static const bool value = false; };
+    template <> struct is_unsigned_type<float>       { static const bool value = false; };
 
 // ----------------------------------------------------------------------------------------
 
     /*!A is_signed_type 
 
         This is a template where is_signed_type<T>::value == true when T is a signed
-        integral type and false when T is an unsigned integral type.
+        scalar type and false when T is an unsigned scalar type.
     !*/
     template <
         typename T
@@ -627,6 +664,28 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
     
+    template <
+        typename T
+        >
+    typename enable_if<is_built_in_scalar_type<T>,bool>::type is_finite (
+        const T& value
+    )
+    /*!
+        requires
+            - value must be some kind of scalar type such as int or double
+        ensures
+            - returns true if value is a finite value (e.g. not infinity or NaN) and false
+              otherwise.
+    !*/
+    {
+        if (is_float_type<T>::value)
+            return -std::numeric_limits<T>::infinity() < value && value < std::numeric_limits<T>::infinity();
+        else
+            return true;
+    }
+
+// ----------------------------------------------------------------------------------------
+
     /*!A promote 
         
         This is a template that takes one of the built in scalar types and gives you another
@@ -762,6 +821,51 @@ namespace dlib
         struct tmin { const static long value = x; };
         template <long x, long y>
         struct tmin<x,y,typename enable_if_c<(y < x)>::type> { const static long value = y; };
+
+    // ----------------------------------------------------------------------------------------
+
+#define DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(testname, returnT, funct_name, args)                        \
+    struct _two_bytes_##testname { char a[2]; };                                                       \
+    template < typename T, returnT (T::*funct)args >                                                   \
+    struct _helper_##testname { typedef char type; };                                                  \
+    template <typename T>                                                                              \
+    static char _has_##testname##_helper( typename _helper_##testname<T,&T::funct_name >::type ) { return 0;} \
+    template <typename T>                                                                              \
+    static _two_bytes_##testname _has_##testname##_helper(int) { return _two_bytes_##testname();}             \
+    template <typename T> struct _##testname##workaroundbug {                                          \
+                const static unsigned long U = sizeof(_has_##testname##_helper<T>('a')); };            \
+    template <typename T, unsigned long U = _##testname##workaroundbug<T>::U >                         \
+    struct testname      { static const bool value = false; };                                         \
+    template <typename T>                                                                              \
+    struct testname<T,1> { static const bool value = true; };
+    /*!A DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST
+
+        The DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST() macro is used to define traits templates
+        that tell you if a class has a certain member function.  For example, to make a
+        test to see if a class has a public method with the signature void print(int) you
+        would say:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, print, (int))
+
+        Then you can check if a class, T, has this method by looking at the boolean value:
+            has_print<T>::value 
+        which will be true if the member function is in the T class.
+
+        Note that you can test for member functions taking no arguments by simply passing
+        in empty () like so:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, print, ())
+        This would test for a member of the form:
+            void print().
+
+        To test for const member functions you would use a statement such as this:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, print, ()const)
+        This would test for a member of the form: 
+            void print() const.
+
+        To test for const templated member functions you would use a statement such as this:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, template print<int>, ())
+        This would test for a member of the form: 
+            template <typename T> void print().
+    !*/
 
 // ----------------------------------------------------------------------------------------
 

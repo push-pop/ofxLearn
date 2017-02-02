@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SVM_C_EKm_TRAINER_H__
-#define DLIB_SVM_C_EKm_TRAINER_H__
+#ifndef DLIB_SVM_C_EKm_TRAINER_Hh_
+#define DLIB_SVM_C_EKm_TRAINER_Hh_
 
 #include "../algs.h"
 #include "function.h"
@@ -149,15 +149,15 @@ namespace dlib
         )
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(basis_samples.size() > 0 && is_vector(vector_to_matrix(basis_samples)),
+            DLIB_ASSERT(basis_samples.size() > 0 && is_vector(mat(basis_samples)),
                 "\tvoid svm_c_ekm_trainer::set_basis(basis_samples)"
                 << "\n\t You have to give a non-empty set of basis_samples and it must be a vector"
                 << "\n\t basis_samples.size():                       " << basis_samples.size() 
-                << "\n\t is_vector(vector_to_matrix(basis_samples)): " << is_vector(vector_to_matrix(basis_samples)) 
+                << "\n\t is_vector(mat(basis_samples)): " << is_vector(mat(basis_samples)) 
                 << "\n\t this: " << this
                 );
 
-            basis = vector_to_matrix(basis_samples);
+            basis = mat(basis_samples);
             ekm_stale = true;
         }
 
@@ -311,9 +311,9 @@ namespace dlib
         {
             scalar_type obj;
             if (basis_loaded())
-                return do_train_user_basis(vector_to_matrix(x),vector_to_matrix(y),obj);
+                return do_train_user_basis(mat(x),mat(y),obj);
             else
-                return do_train_auto_basis(vector_to_matrix(x),vector_to_matrix(y),obj);
+                return do_train_auto_basis(mat(x),mat(y),obj);
         }
 
         template <
@@ -327,9 +327,9 @@ namespace dlib
         ) const
         {
             if (basis_loaded())
-                return do_train_user_basis(vector_to_matrix(x),vector_to_matrix(y),svm_objective);
+                return do_train_user_basis(mat(x),mat(y),svm_objective);
             else
-                return do_train_auto_basis(vector_to_matrix(x),vector_to_matrix(y),svm_objective);
+                return do_train_auto_basis(mat(x),mat(y),svm_objective);
         }
 
 
@@ -630,7 +630,7 @@ namespace dlib
 
 }
 
-#endif // DLIB_SVM_C_EKm_TRAINER_H__
+#endif // DLIB_SVM_C_EKm_TRAINER_Hh_
 
 
 

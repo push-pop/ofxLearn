@@ -297,7 +297,7 @@ void ofxLearnKMeans::train()
     for (int i = 0; i < samples.size(); ++i) {
         clusters.push_back(kmeans(samples[i]));
     }
-    return clusters;
+    return;
 }
 
 
@@ -455,7 +455,7 @@ void ofxLearn::svd()
     for (int x = 1; x <= 100; x++)
     {
         tp1 = x/100.0;
-        tp2 = pi*x == 0 ? 1 : sin(pi * x) / (pi * x);
+        tp2 = PI*x == 0 ? 1 : sin(PI * x) / (PI * x);
         
         rs.add(tp2);
     }

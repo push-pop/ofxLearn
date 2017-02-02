@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_STRUCTURAL_SVM_PRObLEM_THREADED_ABSTRACT_H__
-#ifdef DLIB_STRUCTURAL_SVM_PRObLEM_THREADED_ABSTRACT_H__
+#undef DLIB_STRUCTURAL_SVM_PRObLEM_THREADED_ABSTRACT_Hh_
+#ifdef DLIB_STRUCTURAL_SVM_PRObLEM_THREADED_ABSTRACT_Hh_
 
 #include "structural_svm_problem_abstract.h"
 #include "../matrix.h"
@@ -28,7 +28,11 @@ namespace dlib
                 So this object lets you take advantage of a multi-core system.  You should
                 set the num_threads parameter equal to the number of available cores.  Note
                 that the separation_oracle() function which you provide must be thread safe
-                if you are to use this version of the structural_svm_problem.
+                if you are to use this version of the structural_svm_problem.  In
+                particular, it must be safe to call separation_oracle() concurrently from
+                different threads.  However, it is guaranteed that different threads will
+                never make concurrent calls to separation_oracle() using the same idx value
+                (i.e. the first argument).  
         !*/
 
         typedef matrix_type_ matrix_type;
@@ -58,7 +62,7 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_SVM_PRObLEM_THREADED_ABSTRACT_H__
+#endif // DLIB_STRUCTURAL_SVM_PRObLEM_THREADED_ABSTRACT_Hh_
 
 
 

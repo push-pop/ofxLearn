@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_RR_TRAInER_H__
-#define DLIB_RR_TRAInER_H__
+#ifndef DLIB_RR_TRAInER_Hh_
+#define DLIB_RR_TRAInER_Hh_
 
 #include "../algs.h"
 #include "function.h"
@@ -135,7 +135,7 @@ namespace dlib
         {
             std::vector<scalar_type> temp; 
             scalar_type temp2;
-            return do_train(vector_to_matrix(x), vector_to_matrix(y), false, temp, temp2);
+            return do_train(mat(x), mat(y), false, temp, temp2);
         }
 
         template <
@@ -149,7 +149,7 @@ namespace dlib
         ) const
         {
             scalar_type temp;
-            return do_train(vector_to_matrix(x), vector_to_matrix(y), true, loo_values, temp);
+            return do_train(mat(x), mat(y), true, loo_values, temp);
         }
 
         template <
@@ -163,7 +163,7 @@ namespace dlib
             scalar_type& lambda_used 
         ) const
         {
-            return do_train(vector_to_matrix(x), vector_to_matrix(y), true, loo_values, lambda_used);
+            return do_train(mat(x), mat(y), true, loo_values, lambda_used);
         }
 
 
@@ -451,6 +451,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_RR_TRAInER_H__
+#endif // DLIB_RR_TRAInER_Hh_
 
 

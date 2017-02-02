@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_MATRiX_TRSM_H__
-#define DLIB_MATRiX_TRSM_H__
+#ifndef DLIB_MATRiX_TRSM_Hh_
+#define DLIB_MATRiX_TRSM_Hh_
 #include "lapack/fortran_id.h"
 #include "cblas_constants.h"
 
@@ -9,10 +9,9 @@ namespace dlib
 {
     namespace blas_bindings
     {
-
+#ifndef CBLAS_H
         extern "C"
         {
-            /*
             void cblas_strsm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
                              const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE TransA,
                              const enum CBLAS_DIAG Diag, const int M, const int N,
@@ -24,8 +23,8 @@ namespace dlib
                              const enum CBLAS_DIAG Diag, const int M, const int N,
                              const double alpha, const double *A, const int lda,
                              double *B, const int ldb);
-             */
         }
+#endif // if not CBLAS_H
 
     // ------------------------------------------------------------------------------------
 
@@ -649,5 +648,5 @@ namespace dlib
     }
 }
 
-#endif // DLIB_MATRiX_TRSM_H__
+#endif // DLIB_MATRiX_TRSM_Hh_
 

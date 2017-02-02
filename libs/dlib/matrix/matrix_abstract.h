@@ -253,6 +253,8 @@ namespace dlib
         const static long NR = num_rows;
         const static long NC = num_cols;
         const static long cost = 1;
+        typedef T*          iterator;       
+        typedef const T*    const_iterator; 
 
         matrix (
         );
@@ -331,6 +333,30 @@ namespace dlib
                 - for all valid r and c:
                   #(*this)(r,c) == array[r*nc() + c]
                   (i.e. initializes this matrix with the contents of the given array)
+                - #aliases(*this) == true
+                - #ref().aliases(*this) == true
+        !*/
+        
+        matrix(
+            const std::initializer_list<T>& l
+        );
+        /*!
+            requires
+                - This matrix is capable of having a size() == l.size().  Therefore, if
+                  NR*NC != 0 then l.size() must equal NR*NC.  Alternatively, if NR or NC is
+                  != 0 then l.size() must be a multiple of the non-zero NR or NC.
+            ensures
+                - #size() == l.size()
+                - The contents of l are enumerated and read into the matrix in row major order.
+                - if (NR != 0) then
+                    - #nr() == NR
+                    - #nc() == l.size()/NR
+                - if (NC != 0) then
+                    - #nr() == l.size()/NC
+                    - #nc() == NC
+                - if (NR*NC==0) then
+                    - #nr() == l.size()
+                    - #nc() == 1
                 - #aliases(*this) == true
                 - #ref().aliases(*this) == true
         !*/
@@ -468,6 +494,19 @@ namespace dlib
                 - returns *this
         !*/
 
+        matrix& operator=(
+            const std::initializer_list<T>& l
+        );
+        /*!
+            requires
+                - This matrix is capable of having a size() == l.size().  Therefore, if
+                  NR*NC != 0 then l.size() must equal NR*NC.  Alternatively, if NR or NC is
+                  != 0 then l.size() must be a multiple of the non-zero NR or NC.
+            ensures
+                - Assigns the contents of l to *this by performing: matrix(l).swap(*this)
+                - returns *this
+        !*/
+
         template <typename EXP>
         matrix& operator= (
             const matrix_exp<EXP>& m
@@ -490,6 +529,10 @@ namespace dlib
         /*!
             requires
                 - matrix_exp<EXP>::type == T
+                - One of the following is true:
+                    - nr() == m.nr() && nc() == m.nc()
+                    - size() == 0
+                  (i.e. this matrix must have matching dimensions or it must be empty)
             ensures
                 - if (nr() == m.nr() && nc() == m.nc()) then
                     - #(*this) == *this + m
@@ -507,6 +550,10 @@ namespace dlib
         /*!
             requires
                 - matrix_exp<EXP>::type == T
+                - One of the following is true:
+                    - nr() == m.nr() && nc() == m.nc()
+                    - size() == 0
+                  (i.e. this matrix must have matching dimensions or it must be empty)
             ensures
                 - if (nr() == m.nr() && nc() == m.nc()) then
                     - #(*this) == *this - m
@@ -601,11 +648,60 @@ namespace dlib
             ensures
                 - swaps *this and item
         !*/
+
+        iterator begin(
+        );
+        /*!
+            ensures
+                - returns a random access iterator pointing to the first element in this
+                  matrix.
+                - The iterator will iterate over the elements of the matrix in row major
+                  order if layout is row_major_layout or in column major order if layout is
+                  column_major_layout.
+        !*/
+
+        iterator end(
+        );
+        /*!
+            ensures
+                - returns a random access iterator pointing to one past the end of the last
+                  element in this matrix.
+        !*/
+
+        const_iterator begin(
+        ) const;
+        /*!
+            ensures
+                - returns a random access iterator pointing to the first element in this
+                  matrix.  
+                - The iterator will iterate over the elements of the matrix in row major
+                  order if layout is row_major_layout or in column major order if layout is
+                  column_major_layout.
+        !*/
+
+        const_iterator end(
+        ) const;
+        /*!
+            ensures
+                - returns a random access iterator pointing to one past the end of the last
+                  element in this matrix.
+        !*/
     };
 
 // ----------------------------------------------------------------------------------------
 
-    template <
+    /*!A matrix_colmajor 
+        This is just a typedef of the matrix object that uses column major layout. 
+    !*/
+    typedef matrix<double,0,0,default_memory_manager,column_major_layout> matrix_colmajor;
+
+    /*!A fmatrix_colmajor 
+        This is just a typedef of the matrix object that uses column major layout. 
+    !*/
+    typedef matrix<float,0,0,default_memory_manager,column_major_layout> fmatrix_colmajor;
+
+// ----------------------------------------------------------------------------------------
+template <
         typename T,
         long NR,
         long NC,
@@ -632,7 +728,9 @@ namespace dlib
         std::ostream& out
     );   
     /*!
-        Provides serialization support 
+        Provides serialization support.  Note that the serialization formats used by the
+        dlib::matrix and dlib::array2d objects are compatible.  That means you can load the
+        serialized data from one into another and it will work properly.
     !*/
 
     template <
@@ -662,6 +760,42 @@ namespace dlib
             - writes m to the given out stream in a form suitable for human consumption.
             - returns out
     !*/
+
+    template <
+        typename T, 
+        long NR, 
+        long NC,
+        typename MM,
+        typename L
+        >
+    std::istream& operator>> (
+        std::istream& in,
+        matrix<T,NR,NC,MM,L>& m
+    );
+    /*!
+        ensures
+            - Tries to read a matrix from the given input stream and store it into #m.
+            - The format expected is the text format output by the above operator<<().
+              That is, the format should be a grid of text such as:
+                2 3 4
+                5 2 6 
+            - The separation between numbers can be any number of whitespace characters or
+              commas.      
+            - The matrix data is assumed to end upon the first blank line or end-of-file,
+              whichever comes first.  This means you can create an input stream with
+              multiple matrices in it by separating them with empty lines.
+            - returns in. 
+            - If there was a formatting error or something which prevents the input data
+              from being parsed into a matrix then #in.fail() == true.
+    !*/
+
+    /*!A csv
+        This object is used to define an io manipulator for matrix expressions.  In
+        particular, you can write statements like:
+            cout << csv << yourmatrix;
+        and have it print the matrix with commas separating each element.
+    !*/
+    some_undefined_iomnaip_type csv;
 
 // ----------------------------------------------------------------------------------------
 

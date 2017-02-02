@@ -1,7 +1,7 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_CIRCULAR_BuFFER_ABSTRACT_H__
-#ifdef DLIB_CIRCULAR_BuFFER_ABSTRACT_H__
+#undef DLIB_CIRCULAR_BuFFER_ABSTRACT_Hh_
+#ifdef DLIB_CIRCULAR_BuFFER_ABSTRACT_Hh_
 
 #include "../algs.h"
 #include "../serialize.h"
@@ -224,8 +224,25 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T
+        >
+    const matrix_exp mat (
+        const circular_buffer<T>& m 
+    );
+    /*!
+        ensures
+            - returns a matrix R such that:
+                - is_col_vector(R) == true 
+                - R.size() == m.size()
+                - for all valid r:
+                  R(r) == m[r]
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
 }
 
-#endif // DLIB_CIRCULAR_BuFFER_ABSTRACT_H__
+#endif // DLIB_CIRCULAR_BuFFER_ABSTRACT_Hh_
 
 

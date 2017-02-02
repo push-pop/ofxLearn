@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_KRR_TRAInER_ABSTRACT_H__
-#ifdef DLIB_KRR_TRAInER_ABSTRACT_H__
+#undef DLIB_KRR_TRAInER_ABSTRACT_Hh_
+#ifdef DLIB_KRR_TRAInER_ABSTRACT_Hh_
 
 #include "../algs.h"
 #include "function_abstract.h"
@@ -102,7 +102,7 @@ namespace dlib
         );
         /*!
             requires
-                - T must be a dlib::matrix type or something convertible to a matrix via vector_to_matrix()
+                - T must be a dlib::matrix type or something convertible to a matrix via mat()
                   (e.g. a std::vector)
                 - is_vector(basis_samples) == true
                 - basis_samples.size() > 0
@@ -229,9 +229,9 @@ namespace dlib
         ) const;
         /*!
             requires
-                - x == a matrix or something convertible to a matrix via vector_to_matrix().
+                - x == a matrix or something convertible to a matrix via mat().
                   Also, x should contain sample_type objects.
-                - y == a matrix or something convertible to a matrix via vector_to_matrix().
+                - y == a matrix or something convertible to a matrix via mat().
                   Also, y should contain scalar_type objects.
                 - is_learning_problem(x,y) == true
                 - if (get_lambda() == 0 && will_use_regression_loss_for_loo_cv() == false) then
@@ -318,5 +318,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_KRR_TRAInER_ABSTRACT_H__
+#endif // DLIB_KRR_TRAInER_ABSTRACT_Hh_
 

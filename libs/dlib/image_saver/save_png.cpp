@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SAVE_PnG_CPP__
-#define DLIB_SAVE_PnG_CPP__
+#ifndef DLIB_SAVE_PnG_CPPh_
+#define DLIB_SAVE_PnG_CPPh_
 
 // only do anything with this file if DLIB_PNG_SUPPORT is defined
 #ifdef DLIB_PNG_SUPPORT
@@ -9,6 +9,7 @@
 #include "save_png.h"
 #include <cstdio>
 #include <png.h>
+#include "../byte_orderer.h"
 
 namespace dlib
 {
@@ -95,7 +96,11 @@ namespace dlib
             png_init_io(png_ptr, fp);
 
 
-            const int png_transforms = PNG_TRANSFORM_IDENTITY;
+            int png_transforms = PNG_TRANSFORM_IDENTITY;
+            byte_orderer bo;
+            if (bo.host_is_little_endian())
+                png_transforms |= PNG_TRANSFORM_SWAP_ENDIAN;
+
             const long height = row_pointers.size();
 
 
@@ -114,6 +119,6 @@ namespace dlib
 
 #endif // DLIB_PNG_SUPPORT
 
-#endif // DLIB_SAVE_PnG_CPP__
+#endif // DLIB_SAVE_PnG_CPPh_
 
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SVm_EPSILON_REGRESSION_TRAINER_H__ 
-#define DLIB_SVm_EPSILON_REGRESSION_TRAINER_H__
+#ifndef DLIB_SVm_EPSILON_REGRESSION_TRAINER_Hh_ 
+#define DLIB_SVm_EPSILON_REGRESSION_TRAINER_Hh_
 
 
 #include "svr_trainer_abstract.h"
@@ -140,7 +140,7 @@ namespace dlib
             const in_scalar_vector_type& y
         ) const
         {
-            return do_train(vector_to_matrix(x), vector_to_matrix(y));
+            return do_train(mat(x), mat(y));
         }
 
         void swap (
@@ -389,5 +389,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_SVm_EPSILON_REGRESSION_TRAINER_H__
+#endif // DLIB_SVm_EPSILON_REGRESSION_TRAINER_Hh_
 

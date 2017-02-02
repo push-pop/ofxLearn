@@ -1843,7 +1843,7 @@ namespace dlib
                   (i.e. this is the number that determines how far in the user is allowed to zoom)
         !*/
 
-        void set_size (
+        virtual void set_size (
             unsigned long width,
             unsigned long height
         );
@@ -1946,6 +1946,18 @@ namespace dlib
                 - invalidates the display_rect() so that it will be redrawn
         !*/
 
+        virtual void on_view_changed (
+        ) {}
+        /*!
+            requires
+                - events_are_enabled() == true
+                - mutex drawable::m is locked
+            ensures
+                - on_view_changed() is called whenever the user causes the view of the
+                  zoomable_region to change.  That is, this function is called when the
+                  user scrolls or zooms around in the region.
+        !*/
+
     // ---------------------------- event handlers ----------------------------
     // The following event handlers are used in this object.  So if you
     // use any of them in your derived object you should pass the events 
@@ -2039,7 +2051,7 @@ namespace dlib
                   style
         !*/
 
-        void set_size (
+        virtual void set_size (
             unsigned long width,
             unsigned long height
         );
@@ -2049,8 +2061,8 @@ namespace dlib
                 - #height() == height_
                 - #top() == top()
                 - #left() == left()
-                - i.e. The location of the upper left corner of this button stays the
-                  same but its width and height are modified
+                - i.e. The location of the upper left corner of this widget stays the
+                  same but its width and height are modified.
         !*/
 
         long horizontal_scroll_pos (
@@ -2233,6 +2245,18 @@ namespace dlib
                 - Adjusts the scroll bars of this object so that the part of 
                   the total_rect() rectangle that overlaps with r is displayed in 
                   the display_rect() rectangle on the screen.
+        !*/
+
+        virtual void on_view_changed (
+        ) {}
+        /*!
+            requires
+                - events_are_enabled() == true
+                - mutex drawable::m is locked
+            ensures
+                - on_view_changed() is called whenever the user causes the view of the
+                  scrollable_region to change.  That is, this function is called when the
+                  user scrolls around in the region.
         !*/
 
     // ---------------------------- event handlers ----------------------------

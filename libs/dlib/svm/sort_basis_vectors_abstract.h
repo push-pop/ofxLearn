@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_SORT_BASIS_VECTORs_ABSTRACT_H__
-#ifdef DLIB_SORT_BASIS_VECTORs_ABSTRACT_H__
+#undef DLIB_SORT_BASIS_VECTORs_ABSTRACT_Hh_
+#ifdef DLIB_SORT_BASIS_VECTORs_ABSTRACT_Hh_
 
 #include <vector>
 
@@ -33,9 +33,9 @@ namespace dlib
             - basis.size() > 0
             - kernel_type is a kernel function object as defined in dlib/svm/kernel_abstract.h 
               It must be capable of operating on the elements of samples and basis.
-            - vect1_type == a matrix or something convertible to a matrix via vector_to_matrix()
-            - vect2_type == a matrix or something convertible to a matrix via vector_to_matrix()
-            - vect3_type == a matrix or something convertible to a matrix via vector_to_matrix()
+            - vect1_type == a matrix or something convertible to a matrix via mat()
+            - vect2_type == a matrix or something convertible to a matrix via mat()
+            - vect3_type == a matrix or something convertible to a matrix via mat()
         ensures
             - A kernel based learning method ultimately needs to select a set of basis functions
               represented by a particular choice of kernel and a set of basis vectors.  
@@ -55,5 +55,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_SORT_BASIS_VECTORs_ABSTRACT_H__
+#endif // DLIB_SORT_BASIS_VECTORs_ABSTRACT_Hh_
 

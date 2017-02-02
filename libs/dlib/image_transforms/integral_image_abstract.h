@@ -7,6 +7,7 @@
 #include "../array2d/array2d_kernel_abstract.h"
 #include "../pixel.h"
 #include "../noncopyable.h"
+#include "../image_processing/generic_image.h"
 
 namespace dlib
 {
@@ -59,8 +60,10 @@ namespace dlib
         );
         /*!
             requires
-                - image_type == a type that implements the array2d/array2d_kernel_abstract.h interface
-                - pixel_traits<typename image_type::type>::has_alpha == false 
+                - image_type == an image object that implements the interface defined in
+                  dlib/image_processing/generic_image.h 
+                - Let P denote the type of pixel in img, then we require:
+                    - pixel_traits<P>::has_alpha == false 
             ensures
                 - #nr() == img.nr()
                 - #nc() == img.nc()
@@ -78,12 +81,31 @@ namespace dlib
                   (i.e. rect must not be outside the integral image)
             ensures
                 - Let O denote the image this integral image was generated from.
-                  Then this function returns sum(subm(array_to_matrix(O),rect)).
+                  Then this function returns sum(subm(mat(O),rect)).
                   That is, this function returns the sum of the pixels in O that
                   are contained within the given rectangle.
         !*/
 
+        void swap(
+            integral_image_generic& item
+        );
+        /*!
+            ensures
+                - swaps *this and item
+        !*/
+
     };
+
+// ----------------------------------------------------------------------------------------
+
+    template < typename T >
+    void swap (
+        integral_image_generic<T>& a,
+        integral_image_generic<T>& b
+    ) { a.swap(b); }
+    /*!
+        provides a global swap function
+    !*/ 
 
 // ----------------------------------------------------------------------------------------
 

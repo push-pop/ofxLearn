@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SORT_BASIS_VECTORs_H__
-#define DLIB_SORT_BASIS_VECTORs_H__
+#ifndef DLIB_SORT_BASIS_VECTORs_Hh_
+#define DLIB_SORT_BASIS_VECTORs_Hh_
 
 #include <vector>
 
@@ -72,7 +72,6 @@ namespace dlib
                         << "\n\t eps:          " << eps 
             );
 
-            typedef typename kernel_type::sample_type sample_type;
             typedef typename kernel_type::scalar_type scalar_type;
             typedef typename kernel_type::mem_manager_type mm_type;
 
@@ -211,9 +210,9 @@ namespace dlib
     )
     {
         return bs_impl::sort_basis_vectors_impl(kern, 
-                                                vector_to_matrix(samples),
-                                                vector_to_matrix(labels),
-                                                vector_to_matrix(basis),
+                                                mat(samples),
+                                                mat(labels),
+                                                mat(basis),
                                                 eps);
     }
 
@@ -221,5 +220,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_SORT_BASIS_VECTORs_H__
+#endif // DLIB_SORT_BASIS_VECTORs_Hh_
 

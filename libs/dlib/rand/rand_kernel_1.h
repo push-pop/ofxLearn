@@ -10,6 +10,7 @@
 #include "../is_kind.h"
 #include <iostream>
 #include "../serialize.h"
+#include "../string.h"
 
 namespace dlib
 {
@@ -36,18 +37,23 @@ namespace dlib
             rand(
             ) 
             {
-                // prime the generator a bit
-                for (int i = 0; i < 10000; ++i)
-                    mt();
+                init();
+            }
 
-                max_val =  0xFFFFFF;
-                max_val *= 0x1000000;
-                max_val += 0xFFFFFF;
-                max_val += 0.01;
+            rand (
+                time_t seed_value
+            )
+            {
+                init();
+                set_seed(cast_to_string(seed_value));
+            }
 
-
-                has_gaussian = false;
-                next_gaussian = 0;
+            rand (
+                const std::string& seed_value
+            )
+            {
+                init();
+                set_seed(seed_value);
             }
 
             virtual ~rand(
@@ -121,6 +127,23 @@ namespace dlib
             )
             {
                 return mt();
+            }
+
+            inline uint64 get_random_64bit_number (
+            )
+            {
+                const uint64 a = get_random_32bit_number();
+                const uint64 b = get_random_32bit_number();
+                return (a<<32)|b;
+            }
+
+            double get_double_in_range (
+                double begin,
+                double end
+            )
+            {
+                DLIB_ASSERT(begin <= end);
+                return begin + get_random_double()*(end-begin);
             }
 
             double get_random_double (
@@ -226,6 +249,23 @@ namespace dlib
             );
 
         private:
+
+            void init()
+            {
+                // prime the generator a bit
+                for (int i = 0; i < 10000; ++i)
+                    mt();
+
+                max_val =  0xFFFFFF;
+                max_val *= 0x1000000;
+                max_val += 0xFFFFFF;
+                max_val += 0.01;
+
+
+                has_gaussian = false;
+                next_gaussian = 0;
+            }
+
             mt19937 mt;
 
             std::string seed;

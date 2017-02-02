@@ -52,10 +52,9 @@ namespace dlib
                 of this object throw exceptions.
 
 
-                Finally, note that this object stores each row of data contiguously 
-                in memory, and the overall layout is in row major order.  However,
-                there might be padding at the end of each row.  To determine the
-                offset from one row to another you can use width_step(). 
+                Finally, note that this object stores its data contiguously and in 
+                row major order.  Moreover, there is no padding at the end of each row.
+                This means that its width_step() value is always equal to sizeof(type)*nc().  
         !*/
 
 
@@ -109,7 +108,6 @@ namespace dlib
         private:
             // restricted functions
             row();
-            row(row&);
             row& operator=(row&);
         };
 
@@ -124,14 +122,22 @@ namespace dlib
                 - std::bad_alloc 
         !*/
 
+        array2d(
+            array2d&& item
+        );
+        /*!
+            ensures
+                - Moves the state of item into *this.
+                - #item is in a valid but unspecified state.
+        !*/
+
         array2d (
             long rows,
             long cols 
         );
         /*!
             requires
-                - cols > 0 && rows > 0 or
-                  cols == 0 && rows == 0
+                - rows >= 0 && cols >= 0
             ensures
                 - #nc() == cols
                 - #nr() == rows
@@ -176,8 +182,7 @@ namespace dlib
         );
         /*!
             requires
-                - cols > 0 && rows > 0 or
-                  cols == 0 && rows == 0
+                - rows >= 0 && cols >= 0
             ensures
                 - #nc() == cols
                 - #nr() == rows
@@ -192,7 +197,7 @@ namespace dlib
                     value for its type.
         !*/
 
-        row& operator[] (
+        row operator[] (
             long row_index
         );
         /*!
@@ -203,7 +208,7 @@ namespace dlib
                   given row_index'th row in *this.
         !*/
 
-        const row& operator[] (
+        const row operator[] (
             long row_index
         ) const;
         /*!
@@ -222,6 +227,16 @@ namespace dlib
                 - swaps *this and item
         !*/ 
 
+        array2d& operator= (
+            array2d&& rhs
+        );
+        /*!
+            ensures
+                - Moves the state of item into *this.
+                - #item is in a valid but unspecified state.
+                - returns #*this
+        !*/
+
         long width_step (
         ) const;
         /*!
@@ -229,6 +244,12 @@ namespace dlib
                 - returns the size of one row of the image, in bytes.  
                   More precisely, return a number N such that:
                   (char*)&item[0][0] + N == (char*)&item[1][0].
+                - for dlib::array2d objects, the returned value
+                  is always equal to sizeof(type)*nc().  However,
+                  other objects which implement dlib::array2d style
+                  interfaces might have padding at the ends of their
+                  rows and therefore might return larger numbers.
+                  An example of such an object is the dlib::cv_image.
         !*/
 
     private:
@@ -260,7 +281,9 @@ namespace dlib
         std::ostream& out 
     );   
     /*!
-        provides serialization support 
+        Provides serialization support.  Note that the serialization formats used by the
+        dlib::matrix and dlib::array2d objects are compatible.  That means you can load the
+        serialized data from one into another and it will work properly.
     !*/
 
     template <

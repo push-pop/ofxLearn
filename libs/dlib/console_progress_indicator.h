@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_CONSOLE_PROGRESS_INDiCATOR_H__
-#define DLIB_CONSOLE_PROGRESS_INDiCATOR_H__
+#ifndef DLIB_CONSOLE_PROGRESS_INDiCATOR_Hh_
+#define DLIB_CONSOLE_PROGRESS_INDiCATOR_Hh_
 
 #include <ctime>
 #include <cmath>
@@ -64,8 +64,9 @@ namespace dlib
                   function returns that targeted value.
         !*/
 
-        inline void print_status (
-            double cur
+        inline bool print_status (
+            double cur,
+            bool always_print = false
         );
         /*!
             ensures
@@ -74,8 +75,15 @@ namespace dlib
                   remaining until cur becomes equal to target().
                 - prints a status message to the screen which indicates how much
                   more time is left until cur is equal to target()
-                - this function throttles the printing so that at most 1 message is
-                  printed each second.
+                - if (always_print) then
+                    - This function prints to the screen each time it is called.
+                - else
+                    - This function throttles the printing so that at most 1 message is
+                      printed each second.  Note that it won't print anything to the screen
+                      until about one second has elapsed.  This means that the first call
+                      to print_status() never prints to the screen.
+                - This function returns true if it prints to the screen and false
+                  otherwise. 
         !*/
 
     private:
@@ -109,9 +117,10 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    void console_progress_indicator::
+    bool console_progress_indicator::
     print_status (
-        double cur
+        double cur,
+        bool always_print
     )
     {
         const time_t cur_time = std::time(0);
@@ -125,10 +134,10 @@ namespace dlib
             last_time = cur_time;
             first_val = cur;
             seen_first_val = true;
-            return;
+            return false;
         }
 
-        if (cur_time != last_time)
+        if (cur_time != last_time || always_print)
         {
             last_time = cur_time;
             double delta_t = static_cast<double>(cur_time - start_time);
@@ -136,7 +145,7 @@ namespace dlib
 
             // don't do anything if cur is equal to first_val
             if (delta_val < std::numeric_limits<double>::epsilon())
-                return;
+                return false;
 
             double seconds = delta_t/delta_val * std::abs(target_val - cur);
 
@@ -148,23 +157,27 @@ namespace dlib
             if (seconds < 60)
             {
                 ss = std::cout.precision(0); 
-                std::cout << "Time remaining: " << seconds << " seconds.                        \r" << std::flush;
+                std::cout << "Time remaining: " << seconds << " seconds.                 \r" << std::flush;
             }
             else if (seconds < 60*60)
             {
                 ss = std::cout.precision(2); 
-                std::cout << "Time remaining: " << seconds/60 << " minutes.                        \r" << std::flush;
+                std::cout << "Time remaining: " << seconds/60 << " minutes.                 \r" << std::flush;
             }
             else 
             {
                 ss = std::cout.precision(2); 
-                std::cout << "Time remaining: " << seconds/60/60 << " hours.                        \r" << std::flush;
+                std::cout << "Time remaining: " << seconds/60/60 << " hours.                 \r" << std::flush;
             }
 
             // restore previous output flags and precision settings
             std::cout.flags(oldflags); 
             std::cout.precision(ss); 
+
+            return true;
         }
+
+        return false;
     }
 
 // ----------------------------------------------------------------------------------------
@@ -190,5 +203,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_CONSOLE_PROGRESS_INDiCATOR_H__
+#endif // DLIB_CONSOLE_PROGRESS_INDiCATOR_Hh_
 

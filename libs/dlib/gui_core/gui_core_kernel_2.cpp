@@ -13,6 +13,7 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/Xlocale.h>
+#include <X11/XKBlib.h>
 #include <poll.h>
 #include <iostream>
 #include "../assert.h"
@@ -224,6 +225,10 @@ namespace dlib
                     window_table.get_mutex().unlock();
 
                     xim = NULL;
+                    // I'm disabling XIM usage all together because calling XSetICValues()
+                    // in set_im_pos() randomly hangs the application (on Ubuntu 13.10 at
+                    // least).    
+                    /*
                     window_table.get_mutex().lock();
                     std::string saved_locale(setlocale (LC_CTYPE, NULL));
                     if (setlocale( LC_CTYPE, "" ) && XSupportsLocale() && XSetLocaleModifiers(""))
@@ -231,7 +236,7 @@ namespace dlib
                     else
                         setlocale( LC_CTYPE, saved_locale.c_str() );
                     window_table.get_mutex().unlock();
-
+                    */
                     if (xim)
                     {
                         const static XIMStyle preedit_styles[] =
@@ -1263,7 +1268,7 @@ namespace dlib
             {
                 if ( codes[n] == 0 )
                     continue;
-                switch(XKeycodeToKeysym( disp, codes[n], 0 ))
+                switch(XkbKeycodeToKeysym( disp, codes[n], 0, 0 ))
                 {
                     case XK_Alt_L:
                         alt_mask = index_to_modmask(n / map->max_keypermod);

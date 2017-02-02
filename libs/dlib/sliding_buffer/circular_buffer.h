@@ -1,12 +1,13 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_CIRCULAR_BuFFER_H__
-#define DLIB_CIRCULAR_BuFFER_H__
+#ifndef DLIB_CIRCULAR_BuFFER_Hh_
+#define DLIB_CIRCULAR_BuFFER_Hh_
 
 #include "circular_buffer_abstract.h"
 #include <vector>
 #include "../algs.h"
 #include "../serialize.h"
+#include "../matrix/matrix_mat.h"
 
 namespace dlib
 {
@@ -211,7 +212,20 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T
+        >
+    const matrix_op<op_array_to_mat<circular_buffer<T> > > mat (
+        const circular_buffer<T>& m 
+    )
+    {
+        typedef op_array_to_mat<circular_buffer<T> > op;
+        return matrix_op<op>(op(m));
+    }
+
+// ----------------------------------------------------------------------------------------
+
 }
 
-#endif // DLIB_CIRCULAR_BuFFER_H__
+#endif // DLIB_CIRCULAR_BuFFER_Hh_
 

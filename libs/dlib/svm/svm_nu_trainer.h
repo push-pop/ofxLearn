@@ -1,7 +1,7 @@
 // Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SVm_NU_TRAINER_H__ 
-#define DLIB_SVm_NU_TRAINER_H__
+#ifndef DLIB_SVm_NU_TRAINER_Hh_ 
+#define DLIB_SVm_NU_TRAINER_Hh_
 
 //#include "local/make_label_kernel_matrix.h"
 
@@ -138,7 +138,7 @@ namespace dlib
             const in_scalar_vector_type& y
         ) const
         {
-            return do_train(vector_to_matrix(x), vector_to_matrix(y));
+            return do_train(mat(x), mat(y));
         }
 
         void swap (
@@ -322,5 +322,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_SVm_NU_TRAINER_H__
+#endif // DLIB_SVm_NU_TRAINER_Hh_
 

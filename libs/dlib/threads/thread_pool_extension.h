@@ -1,18 +1,19 @@
 // Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_THREAD_POOl_H__
-#define DLIB_THREAD_POOl_H__ 
+#ifndef DLIB_THREAD_POOl_Hh_
+#define DLIB_THREAD_POOl_Hh_ 
 
 #include "thread_pool_extension_abstract.h"
+#include "multithreaded_object_extension.h"
 #include "../member_function_pointer.h"
 #include "../bound_function_pointer.h"
 #include "threads_kernel.h"
 #include "auto_mutex_extension.h"
-#include "multithreaded_object_extension.h"
 #include "../uintn.h"
 #include "../array.h"
 #include "../smart_pointers_thread_safe.h"
 #include "../smart_pointers.h"
+#include <exception>
 
 namespace dlib
 {
@@ -182,7 +183,7 @@ namespace dlib
                 // aren't any other worker threads free so just perform the task right
                 // here
 
-                m.unlock();
+                M.unlock();
                 (obj.*funct)();
 
                 // return a task id that is both non-zero and also one
@@ -225,7 +226,7 @@ namespace dlib
                 // aren't any other worker threads free so just perform the task right
                 // here
 
-                m.unlock();
+                M.unlock();
                 (obj.*funct)(arg1);
 
                 // return a task id that is both non-zero and also one
@@ -270,7 +271,7 @@ namespace dlib
                 // aren't any other worker threads free so just perform the task right
                 // here
 
-                m.unlock();
+                M.unlock();
                 (obj.*funct)(arg1, arg2);
 
                 // return a task id that is both non-zero and also one
@@ -445,12 +446,23 @@ namespace dlib
             long arg1;
             long arg2;
 
-            member_function_pointer<>::kernel_1a mfp0;
-            member_function_pointer<long>::kernel_1a mfp1;
-            member_function_pointer<long,long>::kernel_1a mfp2;
+            member_function_pointer<> mfp0;
+            member_function_pointer<long> mfp1;
+            member_function_pointer<long,long> mfp2;
             bfp_type bfp;
 
             shared_ptr<function_object_copy> function_copy;
+            mutable std::exception_ptr eptr; // non-null if the task threw an exception
+
+            void propagate_exception() const
+            {
+                if (eptr)
+                {
+                    auto tmp = eptr;
+                    eptr = nullptr;
+                    std::rethrow_exception(tmp);
+                }
+            }
 
         };
 
@@ -493,7 +505,25 @@ namespace dlib
         ~thread_pool (
         )
         {
-            impl->shutdown_pool();
+            try
+            {
+                impl->shutdown_pool();
+            }
+            catch (std::exception& e)
+            {
+                std::cerr << "An unhandled exception was inside a dlib::thread_pool when it was destructed." << std::endl;
+                std::cerr << "It's what string is: \n" << e.what() << std::endl;
+                using namespace std;
+                assert(false);
+                abort();
+            }
+            catch (...)
+            {
+                std::cerr << "An unhandled exception was inside a dlib::thread_pool when it was destructed." << std::endl;
+                using namespace std;
+                assert(false);
+                abort();
+            }
         }
 
         void wait_for_task (
@@ -1354,6 +1384,6 @@ namespace dlib
 #include "thread_pool_extension.cpp"
 #endif
 
-#endif // DLIB_THREAD_POOl_H__
+#endif // DLIB_THREAD_POOl_Hh_
 
 

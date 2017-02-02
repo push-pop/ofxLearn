@@ -67,6 +67,40 @@ namespace
             DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix<double,5>())));
             DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix(m))));
             DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix(m))));
+
+            mi = pinv(m,1e-12); 
+            DLIB_TEST(mi.nr() == m.nc());
+            DLIB_TEST(mi.nc() == m.nr());
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix(m))));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix(m))));
+
+            m = diagm(diag(m));
+            mi = pinv(diagm(diag(m)),1e-12); 
+            DLIB_TEST(mi.nr() == m.nc());
+            DLIB_TEST(mi.nc() == m.nr());
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix(m))));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix(m))));
+
+            mi = pinv(m,0); 
+            DLIB_TEST(mi.nr() == m.nc());
+            DLIB_TEST(mi.nc() == m.nr());
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix(m))));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix(m))));
+
+            m = diagm(diag(m));
+            mi = pinv(diagm(diag(m)),0); 
+            DLIB_TEST(mi.nr() == m.nc());
+            DLIB_TEST(mi.nc() == m.nr());
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix(m))));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix(m))));
         }
         {
             matrix<double,5,0,MM> m(5,5);
@@ -399,6 +433,8 @@ namespace
                 {
                     DLIB_TEST(subm(a,1,2,2,3)(r,c) == (r+1)*a.nc() + c+2);
                     DLIB_TEST(subm(a,1,2,2,3) == subm(a,rect));
+                    DLIB_TEST(subm_clipped(a,1,2,2,3) == subm(a,rect));
+                    DLIB_TEST(subm_clipped(a,1,2,2,3) == subm_clipped(a,rect));
                 }
             }
 
@@ -422,26 +458,26 @@ namespace
 
 
 
-            DLIB_TEST(rowm(array_to_matrix(a),1).nr() == 1);
-            DLIB_TEST(rowm(array_to_matrix(a),1).nc() == a.nc());
-            DLIB_TEST(colm(array_to_matrix(a),1).nr() == a.nr());
-            DLIB_TEST(colm(array_to_matrix(a),1).nc() == 1);
+            DLIB_TEST(rowm(mat(a),1).nr() == 1);
+            DLIB_TEST(rowm(mat(a),1).nc() == a.nc());
+            DLIB_TEST(colm(mat(a),1).nr() == a.nr());
+            DLIB_TEST(colm(mat(a),1).nc() == 1);
 
             for (long c = 0; c < a.nc(); ++c)
             {
-                DLIB_TEST( rowm(array_to_matrix(a),1)(c) == 1*a.nc() + c);
+                DLIB_TEST( rowm(mat(a),1)(c) == 1*a.nc() + c);
             }
 
             for (long r = 0; r < a.nr(); ++r)
             {
-                DLIB_TEST( colm(array_to_matrix(a),1)(r) == r*a.nc() + 1);
+                DLIB_TEST( colm(mat(a),1)(r) == r*a.nc() + 1);
             }
 
             for (long r = 0; r < 2; ++r)
             {
                 for (long c = 0; c < 3; ++c)
                 {
-                    DLIB_TEST(subm(array_to_matrix(a),1,2,2,3)(r,c) == (r+1)*a.nc() + c+2);
+                    DLIB_TEST(subm(mat(a),1,2,2,3)(r,c) == (r+1)*a.nc() + c+2);
                 }
             }
 
@@ -461,11 +497,11 @@ namespace
             }
 
 
-            matrix<double> mi = pinv(cos(exp(array_to_matrix(m))) ); 
+            matrix<double> mi = pinv(cos(exp(mat(m))) ); 
             DLIB_TEST(mi.nr() == m.nc());
             DLIB_TEST(mi.nc() == m.nr());
-            DLIB_TEST((equal(round_zeros(mi*cos(exp(array_to_matrix(m))),0.000001) , identity_matrix<double,5>())));
-            DLIB_TEST((equal(round_zeros(cos(exp(array_to_matrix(m)))*mi,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(mi*cos(exp(mat(m))),0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(cos(exp(mat(m)))*mi,0.000001) , identity_matrix<double,5>())));
         }
 
         {
@@ -636,6 +672,13 @@ namespace
 
         }
 
+    }
+
+
+    void matrix_test2()
+    {
+        print_spinner();
+
 
         {
 
@@ -652,7 +695,7 @@ namespace
             matrix<double> L = chol(m);
             DLIB_TEST(equal(L*trans(L), m));
 
-            DLIB_TEST_MSG(equal(inv(m), inv_upper_triangular(trans(L))*inv_lower_triangular((L))), "") 
+            DLIB_TEST_MSG(equal(inv(m), inv_upper_triangular(trans(L))*inv_lower_triangular((L))), "");
             DLIB_TEST(equal(round_zeros(inv_upper_triangular(trans(L))*trans(L),1e-10), identity_matrix<double>(3), 1e-10)); 
             DLIB_TEST(equal(round_zeros(inv_lower_triangular((L))*(L),1e-10) ,identity_matrix<double>(3),1e-10)); 
 
@@ -677,9 +720,9 @@ namespace
             matrix<double> L = chol(m);
             DLIB_TEST_MSG(equal(L*trans(L), m, 1e-10), L*trans(L)-m);
 
-            DLIB_TEST_MSG(equal(inv(m), inv_upper_triangular(trans(L))*inv_lower_triangular((L))), "") 
-            DLIB_TEST_MSG(equal(inv(m), trans(inv_lower_triangular(L))*inv_lower_triangular((L))), "") 
-            DLIB_TEST_MSG(equal(inv(m), trans(inv_lower_triangular(L))*trans(inv_upper_triangular(trans(L)))), "") 
+            DLIB_TEST_MSG(equal(inv(m), inv_upper_triangular(trans(L))*inv_lower_triangular((L))), "");
+            DLIB_TEST_MSG(equal(inv(m), trans(inv_lower_triangular(L))*inv_lower_triangular((L))), ""); 
+            DLIB_TEST_MSG(equal(inv(m), trans(inv_lower_triangular(L))*trans(inv_upper_triangular(trans(L)))), "");
             DLIB_TEST_MSG(equal(round_zeros(inv_upper_triangular(trans(L))*trans(L),1e-10) , identity_matrix<double>(6), 1e-10),
                          round_zeros(inv_upper_triangular(trans(L))*trans(L),1e-10)); 
             DLIB_TEST_MSG(equal(round_zeros(inv_lower_triangular((L))*(L),1e-10) ,identity_matrix<double>(6), 1e-10),
@@ -711,7 +754,7 @@ namespace
             matrix<double> L = chol(m);
             DLIB_TEST_MSG(equal(L*trans(L), m, 1e-10), L*trans(L)-m);
 
-            DLIB_TEST_MSG(equal(inv(m), inv_upper_triangular(trans(L))*inv_lower_triangular((L))), "") 
+            DLIB_TEST_MSG(equal(inv(m), inv_upper_triangular(trans(L))*inv_lower_triangular((L))), ""); 
             DLIB_TEST_MSG(equal(round_zeros(inv_upper_triangular(trans(L))*trans(L),1e-10) , identity_matrix<double>(6), 1e-10),
                          round_zeros(inv_upper_triangular(trans(L))*trans(L),1e-10)); 
             DLIB_TEST_MSG(equal(round_zeros(inv_lower_triangular((L))*(L),1e-10) ,identity_matrix<double>(6), 1e-10),
@@ -1208,6 +1251,7 @@ namespace
             m1 = 1;
             m2 = 1;
             m1 = m1*subm(m2,0,0,3,3);
+            DLIB_TEST(is_finite(m1));
         }
         {
             matrix<double,3,1> m1;
@@ -1253,7 +1297,81 @@ namespace
 
             DLIB_TEST(m(0) == 6);
             DLIB_TEST(m(1) == 6);
+            DLIB_TEST(is_finite(m));
         }
+
+
+        {
+            matrix<double> m(3,3);
+            m = 3;
+            m(1,1) = std::numeric_limits<double>::infinity();
+            DLIB_TEST(is_finite(m) == false);
+            m(1,1) = -std::numeric_limits<double>::infinity();
+            DLIB_TEST(is_finite(m) == false);
+            m(1,1) = 2;
+            DLIB_TEST(is_finite(m));
+        }
+
+        {
+            matrix<int> m(4,1), mm, mmm;
+
+            mmm = mm = (m = 1,2,3,4);
+            DLIB_TEST(m(0) == 1);
+            DLIB_TEST(m(1) == 2);
+            DLIB_TEST(m(2) == 3);
+            DLIB_TEST(m(3) == 4);
+            DLIB_TEST(mm == m);
+            DLIB_TEST(mmm == m);
+            DLIB_TEST(mm(0) == 1);
+            DLIB_TEST(mm(1) == 2);
+            DLIB_TEST(mm(2) == 3);
+            DLIB_TEST(mm(3) == 4);
+        }
+
+        {
+            const long n = 5;
+            matrix<double> m1, m2, m3, truth;
+            m1 = randm(n,n);
+            m2 = randm(n,n);
+            m3 = randm(n,n);
+
+
+            truth = m1*m2;
+            m3 = mat(&m1(0,0),n,n)*mat(&m2(0,0),n,n);
+            DLIB_TEST(max(abs(truth-m3)) < 1e-13);
+            m3 = 0;
+            set_ptrm(&m3(0,0),n,n) = mat(&m1(0,0),n,n)*mat(&m2(0,0),n,n);
+            DLIB_TEST(max(abs(truth-m3)) < 1e-13);
+            set_ptrm(&m3(0,0),n,n) = m1*m2;
+            DLIB_TEST(max(abs(truth-m3)) < 1e-13);
+
+            // now make sure it deals with aliasing correctly.
+            truth = m1*m2;
+            m1 = mat(&m1(0,0),n,n)*mat(&m2(0,0),n,n);
+            DLIB_TEST(max(abs(truth-m1)) < 1e-13);
+
+            m1 = randm(n,n);
+            truth = m1*m2;
+            set_ptrm(&m1(0,0),n,n) = mat(&m1(0,0),n,n)*mat(&m2(0,0),n,n);
+            DLIB_TEST(max(abs(truth-m1)) < 1e-13);
+
+            m1 = randm(n,n);
+            truth = m1*m2;
+            set_ptrm(&m1(0,0),n,n) = m1*m2;
+            DLIB_TEST(max(abs(truth-m1)) < 1e-13);
+
+            m1 = randm(n,n);
+            truth = m1+m1*m2;
+            set_ptrm(&m1(0,0),n,n) += m1*m2;
+            DLIB_TEST(max(abs(truth-m1)) < 1e-13);
+
+            m1 = randm(n,n);
+            truth = m1-m1*m2;
+            set_ptrm(&m1(0,0),n,n) -= m1*m2;
+            DLIB_TEST(max(abs(truth-m1)) < 1e-13);
+
+        }
+
     }
 
 
@@ -1274,6 +1392,7 @@ namespace
         )
         {
             matrix_test();
+            matrix_test2();
         }
     } a;
 
